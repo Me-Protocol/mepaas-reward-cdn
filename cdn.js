@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
   button.style.justifyContent = "center";
   button.style.gap = "8px";
   button.style.transition = "all 0.1s linear";
+  button.style.overflow = "hidden";
 
   // Create the text span
   const buttonText = document.createElement("span");
