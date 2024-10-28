@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
+  console.log("User", window.customerData);
+
+  let iframeUrl = "http://localhost:3000";
+
   const button = document.createElement("button");
   button.style.position = "fixed";
   button.style.bottom = "20px";
@@ -74,8 +78,13 @@ document.addEventListener("DOMContentLoaded", function () {
   modal.style.transition = "transform 0.4s ease, opacity 0.4s ease";
   modal.style.overflow = "hidden";
 
+  //  For shopify app
+  if (window.customerData) {
+    iframeUrl = `${iframeUrl}?email=${window.customerData.email}&?firstName=${window.customerData.firstName}&?lastName=${window.customerData.lastName}`;
+  }
+
   const iframe = document.createElement("iframe");
-  iframe.src = "http://localhost:3000";
+  iframe.src = iframeUrl;
   iframe.style.width = "100%";
   iframe.style.height = "100%";
   iframe.style.border = "none";
