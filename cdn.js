@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("User", window.customerData);
-
   let iframeUrl = "http://localhost:3000";
 
   const button = document.createElement("button");
@@ -137,25 +135,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
       modalOpen = true;
     } else {
-      // Hide the modal when the button is clicked again
-      modal.style.transform = "translateY(20px)";
-      modal.style.opacity = "0";
-
-      setTimeout(() => {
-        modal.style.display = "none"; // Hide the modal after the transition
-        if (window.innerWidth <= 768) {
-          button.style.display = "flex"; // Show the button again only on mobile
-        }
-        modalOpen = false;
-      }, 100);
-
-      // Reset the button text, icon, and size with transition
-      button.innerHTML = ""; // Clear button content
-      button.appendChild(svgIcon); // Append the original icon
-      button.appendChild(buttonText); // Append the original text
-      button.style.width = "130px";
+      closeModal();
     }
   });
+
+  const closeModal = function () {
+    // Hide the modal when the button is clicked again
+    modal.style.transform = "translateY(20px)";
+    modal.style.opacity = "0";
+
+    setTimeout(() => {
+      modal.style.display = "none"; // Hide the modal after the transition
+      if (window.innerWidth <= 768) {
+        button.style.display = "flex"; // Show the button again only on mobile
+      }
+      modalOpen = false;
+    }, 100);
+
+    // Reset the button text, icon, and size with transition
+    button.innerHTML = ""; // Clear button content
+    button.appendChild(svgIcon); // Append the original icon
+    button.appendChild(buttonText); // Append the original text
+    button.style.width = "130px";
+  };
 
   // Media query to make modal fullscreen on mobile
   const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -188,4 +190,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initial check to apply styles based on screen size
   handleMediaQueryChange(mediaQuery);
+
+  window.addEventListener("message", function (event) {
+    if (event.origin !== iframeUrl) return;
+    if (event.data.action === "goToSignUp") {
+      window.location.href = "/account/register";
+    }
+  });
+
+  window.addEventListener("message", function (event) {
+    if (event.origin !== iframeUrl) return;
+    if (event.data.action === "goToSignIn") {
+      window.location.href = "/account/login";
+    }
+  });
+
+  window.addEventListener("message", function (event) {
+    if (event.origin !== iframeUrl) return;
+    if (event.data.action === "closeModal") {
+      closeModal();
+    }
+  });
 });
