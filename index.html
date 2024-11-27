@@ -1,16 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    5
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CDN use case</title>
     <script src="/cdn.js"></script>
   </head>
   <body>
+    <p>Set params</p>
+    <input type="text" placeholder="api key" />
+    <input type="text" placeholder="email address" />
     <button>Click me</button>
     <script>
       document.querySelector("button").addEventListener("click", () => {
-        alert("Hello from CDN");
+        const apiKey = document.querySelector(
+          "input[placeholder='api key']"
+        ).value;
+        const email = document.querySelector(
+          "input[placeholder='email address']"
+        ).value;
+
+        if (email) {
+          window.setCustomerData({
+            email,
+            id: "dfddd",
+            firstName: "Name",
+            lastName: "Last Name",
+          });
+        }
+        if (apiKey) {
+          window.setApiKey(apiKey);
+        }
       });
     </script>
   </body>
