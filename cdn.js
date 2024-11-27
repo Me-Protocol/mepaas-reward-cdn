@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  let iframeUrl = "http://localhost:3000";
+  let iframeUrl = "https://mepaas-rewards-dev-fb92e3714c44.herokuapp.com/";
 
   const button = document.createElement("button");
   button.style.position = "fixed";
@@ -87,20 +87,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   button.addEventListener("click", function () {
     if (!modalOpen) {
-      if (window.apiKey) {
-        console.log("sending api key");
-        window.parent.postMessage(
-          {
-            apiKey: window.apiKey,
-          },
-          "*"
-        );
-      }
-      if (window.customerData) {
-        console.log("sending customer data");
-        window.parent.postMessage(window.customerData, "*");
-      }
-
       // Show the preloaded modal
       modal.style.display = "flex";
       setTimeout(() => {
@@ -223,17 +209,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // function to send customer data to the iframe
   function setCustomerData(data) {
-    iframe.contentWindow.postMessage(data, "*");
+    iframe.contentWindow.postMessage(data, iframeUrl);
   }
 
   // function to send api key to the iframe
   function setApiKey(apiKey) {
-    iframe.contentWindow.postMessage(
-      {
-        apiKey: apiKey,
-      },
-      "*"
-    );
+    iframe.contentWindow.postMessage({ apiKey: apiKey }, "*");
   }
 
   window.setCustomerData = setCustomerData;
