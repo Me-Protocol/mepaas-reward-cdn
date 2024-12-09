@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  let iframeUrl = "https://mepaas-rewards-dev-fb92e3714c44.herokuapp.com/";
+  let iframeUrl = "https://mepaas-rewards.vercel.app/";
 
   const button = document.createElement("button");
   button.style.position = "fixed";
