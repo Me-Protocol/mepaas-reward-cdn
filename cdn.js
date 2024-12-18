@@ -1,6 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
   let iframeUrl = "https://mepaas-rewards.vercel.app/";
 
+  // Select the script tag by its ID
+  const scriptTag = document.getElementById("mepaas-rewards");
+  // Get the value of the `api-key` attribute
+  const apiKey = scriptTag.getAttribute("api-key");
+
+  if (!apiKey) {
+    return;
+  }
+
   const button = document.createElement("button");
   button.style.position = "fixed";
   button.style.bottom = "20px";
@@ -85,8 +94,17 @@ document.addEventListener("DOMContentLoaded", function () {
   modal.appendChild(iframe);
   document.body.appendChild(modal);
 
+  iframe.onload = function () {
+    iframe.contentWindow.postMessage({ apiKey: apiKey }, "*");
+  };
+
   button.addEventListener("click", function () {
     if (!modalOpen) {
+      // Post data
+      if (window.customerData) {
+        iframe.contentWindow.postMessage(data, iframeUrl);
+      }
+
       // Show the preloaded modal
       modal.style.display = "flex";
       setTimeout(() => {
@@ -209,14 +227,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // function to send customer data to the iframe
   function setCustomerData(data) {
-    iframe.contentWindow.postMessage(data, iframeUrl);
-  }
-
-  // function to send api key to the iframe
-  function setApiKey(apiKey) {
-    iframe.contentWindow.postMessage({ apiKey: apiKey }, "*");
+    window.customerData = data;
   }
 
   window.setCustomerData = setCustomerData;
-  window.setApiKey = setApiKey;
 });
