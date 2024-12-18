@@ -3,7 +3,11 @@
 ## Install
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/Me-Protocol/mepaas-reward-cdn@main/cdn.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/gh/Me-Protocol/mepaas-reward-cdn@main/cdn.js"
+  id="mepaas-rewards"
+  api-key="your-meprotocol-public-api-key"
+></script>
 ```
 
 ## Usage
