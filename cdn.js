@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!modalOpen) {
       // Post data
       if (window.customerData) {
-        iframe.contentWindow.postMessage(data, iframeUrl);
+        iframe.contentWindow.postMessage(window.customerData, iframeUrl);
       }
 
       // Show the preloaded modal
