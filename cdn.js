@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  let iframeUrl = "https://mepaas-rewards.vercel.app/";
+  let iframeUrl = "https://mepass-rewards-dev.vercel.app/";
 
   // Select the script tag by its ID
   const scriptTag = document.getElementById("mepaas-rewards");
