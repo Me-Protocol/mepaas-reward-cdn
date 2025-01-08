@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Get the value of the `api-key` attribute
   const apiKey = scriptTag.getAttribute("api-key");
 
+  let customerData = null;
+
   if (!apiKey) {
     return;
   }
@@ -101,8 +103,8 @@ document.addEventListener("DOMContentLoaded", function () {
   button.addEventListener("click", function () {
     if (!modalOpen) {
       // Post data
-      if (window.customerData) {
-        iframe.contentWindow.postMessage(window.customerData, iframeUrl);
+      if (customerData) {
+        iframe.contentWindow.postMessage(customerData, iframeUrl);
       }
 
       // Show the preloaded modal
@@ -227,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // function to send customer data to the iframe
   function setCustomerData(data) {
-    window.customerData = data;
+    customerData = data;
   }
 
   window.setCustomerData = setCustomerData;
