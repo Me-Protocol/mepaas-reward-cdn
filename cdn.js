@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  let iframeUrl = "https://mepass-rewards-dev.vercel.app/";
-
   // Select the script tag by its ID
   const scriptTag = document.getElementById("mepaas-rewards");
   // Get the value of the `api-key` attribute
@@ -11,6 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!apiKey) {
     return;
   }
+
+  let iframeUrl = `http://localhost:3000?apiKey=${apiKey}`;
 
   const button = document.createElement("button");
   button.style.position = "fixed";
@@ -97,6 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.body.appendChild(modal);
 
   iframe.onload = function () {
+    console.log("Sending api key to iframe", apiKey);
     iframe.contentWindow.postMessage({ apiKey: apiKey }, "*");
   };
 
@@ -207,22 +208,12 @@ document.addEventListener("DOMContentLoaded", function () {
   handleMediaQueryChange(mediaQuery);
 
   window.addEventListener("message", function (event) {
-    if (event.origin !== iframeUrl) return;
+    // if (event.target !== iframeUrl) return;
     if (event.data.action === "goToSignUp") {
       window.location.href = "/account/register";
-    }
-  });
-
-  window.addEventListener("message", function (event) {
-    if (event.origin !== iframeUrl) return;
-    if (event.data.action === "goToSignIn") {
+    } else if (event.data.action === "goToSignIn") {
       window.location.href = "/account/login";
-    }
-  });
-
-  window.addEventListener("message", function (event) {
-    if (event.origin !== iframeUrl) return;
-    if (event.data.action === "closeModal") {
+    } else if (event.data.action === "closeModal") {
       closeModal();
     }
   });

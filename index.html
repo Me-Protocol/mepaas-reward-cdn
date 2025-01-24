@@ -12,17 +12,12 @@
   </head>
   <body>
     <p>Set params</p>
-    <input type="text" placeholder="email address" />
+    <input type="text" id="email" placeholder="email address" />
     <button>Set Value</button>
 
     <script>
       document.querySelector("button").addEventListener("click", () => {
-        const apiKey = document.querySelector(
-          "input[placeholder='api key']"
-        ).value;
-        const email = document.querySelector(
-          "input[placeholder='email address']"
-        ).value;
+        const email = document.getElementById("email").value;
 
         if (email) {
           window.setCustomerData({
@@ -31,10 +26,6 @@
             firstName: "Name",
             lastName: "Last Name",
           });
-        }
-        if (apiKey) {
-          console.log("apiKey", apiKey);
-          window.setApiKey(apiKey);
         }
       });
     </script>
