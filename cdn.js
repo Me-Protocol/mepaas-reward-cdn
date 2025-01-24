@@ -89,6 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const iframe = document.createElement("iframe");
   iframe.src = iframeUrl;
+  iframe.allow = "clipboard-write"
   iframe.style.width = "100%";
   iframe.style.height = "100%";
   iframe.style.border = "none";
