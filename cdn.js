@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  let iframeUrl = `https://mepaas-rewards-q03dmqq0h-my-ai-inc.vercel.app?apiKey=${apiKey}`;
+  let iframeUrl = `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
 
   const button = document.createElement("button");
   button.style.position = "fixed";
