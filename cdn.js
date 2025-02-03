@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function constructIframeUrl() {
-    return `http://localhost:3000?apiKey=${apiKey}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
+    return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
   }
 
   const button = document.createElement("button");
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const queryParams = new URLSearchParams({
         productIds: JSON.stringify(productIds),
       });
-      const url = `http://127.0.0.1:1450/brand/redemption-methods/get-by-product-ids?${queryParams}`;
+      const url = `https://api.meappbounty.com/brand/redemption-methods/get-by-product-ids?${queryParams}`;
 
       const response = await fetch(url, {
         headers: {
