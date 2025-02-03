@@ -4,11 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CDN use case</title>
-    <script
-      src="/cdn.js"
-      id="mepaas-rewards"
-      api-key="l57erlfaipgnsmv8xewnn"
-    ></script>
+    <script src="/cdn.js" api-key="l57erlfaipgnsmv8xewnn"></script>
   </head>
   <body>
     <p>Set params</p>
@@ -20,14 +16,13 @@
         const email = document.getElementById("email").value;
 
         if (email) {
-          window.setCustomerData({
-            email,
-            id: "dfddd",
-            firstName: "Name",
-            lastName: "Last Name",
-          });
+          window.customerEmail = email;
         }
       });
+
+      setTimeout(() => {
+        window.apiKey = "l57erlfaipgnsmv8xewnn";
+      }, 1000);
     </script>
   </body>
 </html>
