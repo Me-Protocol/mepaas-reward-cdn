@@ -1,16 +1,19 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Select the script tag by its ID
   const scriptTag = document.getElementById("mepaas-rewards");
-  // Get the value of the `api-key` attribute
   const apiKey = scriptTag.getAttribute("api-key");
 
   let customerData = null;
+  let offerData = null;
+  let popupVisible = false;
+  let iframe = null;
 
   if (!apiKey) {
     return;
   }
 
-  let iframeUrl = `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
+  function constructIframeUrl() {
+    return `http://localhost:3000?apiKey=${apiKey}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
+  }
 
   const button = document.createElement("button");
   button.style.position = "fixed";
@@ -32,11 +35,9 @@ document.addEventListener("DOMContentLoaded", function () {
   button.style.transition = "all 0.1s linear";
   button.style.overflow = "hidden";
 
-  // Create the text span
   const buttonText = document.createElement("span");
   buttonText.innerText = "Rewards";
 
-  // Create the SVG icon
   const svgIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svgIcon.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   svgIcon.setAttribute("fill", "none");
@@ -55,19 +56,13 @@ document.addEventListener("DOMContentLoaded", function () {
     "M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
   );
 
-  // Append the path to the SVG
   svgIcon.appendChild(path);
-
-  // Append both text and SVG to the button
   button.appendChild(svgIcon);
   button.appendChild(buttonText);
-
-  // Append the button to the document
   document.body.appendChild(button);
 
   let modalOpen = false;
 
-  // Create modal and iframe (preload the iframe)
   const modal = document.createElement("div");
   modal.style.position = "fixed";
   modal.style.bottom = "100px";
@@ -87,8 +82,8 @@ document.addEventListener("DOMContentLoaded", function () {
   modal.style.transition = "transform 0.4s ease, opacity 0.4s ease";
   modal.style.overflow = "hidden";
 
-  const iframe = document.createElement("iframe");
-  iframe.src = iframeUrl;
+  iframe = document.createElement("iframe");
+  iframe.src = constructIframeUrl();
   iframe.allow = "clipboard-write";
   iframe.style.width = "100%";
   iframe.style.height = "100%";
@@ -104,24 +99,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
   button.addEventListener("click", function () {
     if (!modalOpen) {
-      // Post data
+      closePopup();
+
       if (customerData) {
-        iframe.contentWindow.postMessage(customerData, iframeUrl);
+        iframe.contentWindow.postMessage(customerData, "*");
       }
 
-      // Show the preloaded modal
       modal.style.display = "flex";
       setTimeout(() => {
         modal.style.transform = "translateY(0)";
         modal.style.opacity = "1";
       }, 10);
 
-      // On mobile, hide the button when the modal is open
       if (window.innerWidth <= 768) {
         button.style.display = "none";
       }
 
-      // Replace button content with the SVG icon (close icon)
       button.innerText = "";
 
       const closeIcon = document.createElementNS(
@@ -148,7 +141,7 @@ document.addEventListener("DOMContentLoaded", function () {
       closeIcon.appendChild(closePath);
       button.appendChild(closeIcon);
 
-      button.style.width = "60px"; // Adjust button size for the icon
+      button.style.width = "60px";
 
       modalOpen = true;
     } else {
@@ -157,43 +150,41 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   const closeModal = function () {
-    // Hide the modal when the button is clicked again
     modal.style.transform = "translateY(20px)";
     modal.style.opacity = "0";
 
     setTimeout(() => {
-      modal.style.display = "none"; // Hide the modal after the transition
+      modal.style.display = "none";
       if (window.innerWidth <= 768) {
-        button.style.display = "flex"; // Show the button again only on mobile
+        button.style.display = "flex";
       }
       modalOpen = false;
+      if (offerData) {
+        showPopup();
+      }
     }, 100);
 
-    // Reset the button text, icon, and size with transition
-    button.innerHTML = ""; // Clear button content
-    button.appendChild(svgIcon); // Append the original icon
-    button.appendChild(buttonText); // Append the original text
+    button.innerHTML = "";
+    button.appendChild(svgIcon);
+    button.appendChild(buttonText);
     button.style.width = "130px";
   };
 
-  // Media query to make modal fullscreen on mobile
   const mediaQuery = window.matchMedia("(max-width: 768px)");
   function handleMediaQueryChange(e) {
     if (e.matches) {
-      // Mobile view: make the modal fullscreen
       modal.style.width = "100%";
       modal.style.height = "100%";
       modal.style.bottom = "0";
       modal.style.right = "0";
-      modal.style.borderRadius = "0"; // Remove border-radius for fullscreen
+      modal.style.borderRadius = "0";
       if (modalOpen) {
         button.style.display = "none";
       } else {
         button.style.display = "flex";
       }
     } else {
-      // Revert to default styles for larger screens
-      modal.style.width = "360px";
+      modal.style.width = "400px";
       modal.style.height = "600px";
       modal.style.bottom = "100px";
       modal.style.right = "20px";
@@ -202,14 +193,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Attach listener to the media query
   mediaQuery.addListener(handleMediaQueryChange);
-
-  // Initial check to apply styles based on screen size
   handleMediaQueryChange(mediaQuery);
 
   window.addEventListener("message", function (event) {
-    // if (event.target !== iframeUrl) return;
     if (event.data.action === "goToSignUp") {
       window.location.href = "/account/register";
     } else if (event.data.action === "goToSignIn") {
@@ -219,10 +206,99 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // function to send customer data to the iframe
   function setCustomerData(data) {
     customerData = data;
   }
 
   window.setCustomerData = setCustomerData;
+
+  async function fetchOfferData() {
+    try {
+      const productIds = [window.productId];
+      const queryParams = new URLSearchParams({
+        productIds: JSON.stringify(productIds),
+      });
+      const url = `http://127.0.0.1:1450/brand/redemption-methods/get-by-product-ids?${queryParams}`;
+
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        method: "GET",
+      });
+
+      if (response.ok) {
+        const res = await response.json();
+        offerData = res.data?.[0];
+
+        if (offerData) {
+          showPopup();
+          updateIframeUrl();
+        }
+      } else {
+        console.error("Failed to fetch offer data");
+      }
+    } catch (error) {
+      console.error("Error fetching offer data:", error);
+    }
+  }
+
+  function updateIframeUrl() {
+    iframe.src = constructIframeUrl();
+  }
+
+  function showPopup() {
+    if (popupVisible) return;
+
+    const popup = document.createElement("div");
+    popup.id = "special-offer-popup";
+    popup.style.position = "fixed";
+    popup.style.bottom = "90px";
+    popup.style.right = "20px";
+    // popup.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    popup.style.color = "#fff";
+    // popup.style.padding = "10px 20px";
+    popup.style.borderRadius = "8px";
+    popup.style.zIndex = "1002";
+    // popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+    popup.style.cursor = "pointer";
+
+    const popupText = document.createElement("span");
+    popupText.innerHTML = `
+      <div style="background-color: #5434F6; color: #fff; border-radius: 35px; border-bottom-right-radius: 6px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 300px; padding: 20px; display: flex; align-items: center; gap: 20px;">
+        <div>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#fff" style="width: 50px; height: 50px; color: #000;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+          </svg>
+        </div>
+        <div>
+          <h3 style="font-size: 16px;">Redeem Your Coupon</h3>
+          <p style="font-size: 14px; margin-top: 5px;">Use your coupon to get a discount on this product.</p>
+        </div>
+      </div>
+    `;
+    popup.appendChild(popupText);
+
+    document.body.appendChild(popup);
+    popupVisible = true;
+
+    button.addEventListener("click", function () {
+      if (popupVisible) {
+        closePopup();
+      }
+    });
+  }
+
+  function closePopup() {
+    const popup = document.getElementById("special-offer-popup");
+    if (popup) {
+      document.body.removeChild(popup);
+      popupVisible = false;
+    }
+  }
+
+  if (window.productId) {
+    fetchOfferData();
+  }
 });
