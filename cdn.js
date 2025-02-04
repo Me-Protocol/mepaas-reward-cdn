@@ -221,6 +221,8 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = "/account/login";
       } else if (event.data.action === "closeModal") {
         closeModal();
+      } else if (event.data.action === "openPage") {
+        window.location.href = event.data.url;
       }
     });
 
@@ -285,8 +287,8 @@ document.addEventListener("DOMContentLoaded", function () {
             </svg>
           </div>
           <div>
-            <h3 style="font-size: 16px;">Redeem Your Coupon</h3>
-            <p style="font-size: 14px; margin-top: 5px;">Use your coupon to get a discount on this product.</p>
+            <h3 style="font-size: 16px; color: #fff;">Redeem Your Coupon</h3>
+            <p style="font-size: 14px; margin-top: 5px; color: #fff;">Use your coupon to get a discount on this product.</p>
           </div>
         </div>
       `;
