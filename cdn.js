@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function constructIframeUrl() {
-      return `http://localhost:3000?apiKey=${apiKey}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
+      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
     }
 
     const button = document.createElement("button");
