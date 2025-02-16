@@ -1,27 +1,57 @@
+let popupVisible = false;
+let offerData = null;
+let iframe = null;
+let apiKey = null;
+
 document.addEventListener("DOMContentLoaded", function () {
   const scriptTag = document.getElementById("mepaas-rewards");
-  let apiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
-
-  let offerData = null;
-  let popupVisible = false;
-  let iframe = null;
+  const grabApiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
 
   const checkApiKeyInterval = setInterval(() => {
-    if (window.apiKey) {
-      console.log("Found window.apiKey", window.apiKey);
+    if (grabApiKey) {
+      apiKey = grabApiKey;
+      clearInterval(checkApiKeyInterval);
+      if (!window.productId) {
+        initialize();
+      } else {
+        fetchOfferData(apiKey);
+      }
+    } else if (window.apiKey) {
       apiKey = window.apiKey;
       clearInterval(checkApiKeyInterval);
-      initialize();
+      if (!window.productId) {
+        initialize();
+      } else {
+        fetchOfferData(apiKey);
+      }
     }
   }, 1000);
 
-  function initialize() {
+  async function initialize() {
     if (!apiKey) {
       return;
     }
 
+    // make api call to get brand details before showing the rewards button
+
+    const brandRes = await fetch(
+      "https://paas.meappbounty.com/v1/api/auth/sdk/public-key",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-public-key": apiKey,
+        },
+        method: "POST",
+      }
+    );
+
+    const brandData = await brandRes.json();
+
+    const color1 = brandData.data?.brandPrimaryColor ?? "#000000";
+    const color2 = lightenColor(color1, 10);
+
     function constructIframeUrl() {
-      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
+      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
     }
 
     const button = document.createElement("button");
@@ -31,11 +61,13 @@ document.addEventListener("DOMContentLoaded", function () {
     button.style.height = "60px";
     button.style.width = "130px";
     button.style.borderRadius = "100px";
-    button.style.backgroundColor = "#000";
+    // background should be gradient
+    button.style.background = `linear-gradient(90deg, ${color2} 0%, ${color1} 100%)`;
+    button.style.boxShadow = "0 8px 26px 0 rgba(0, 18, 46, 0.16)";
     button.style.color = "#fff";
     button.style.border = "none";
     button.style.cursor = "pointer";
-    button.style.zIndex = "1000";
+    button.style.zIndex = "1500";
     button.style.fontSize = "14px";
     button.style.display = "flex";
     button.style.alignItems = "center";
@@ -77,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const modal = document.createElement("div");
     modal.style.position = "fixed";
-    modal.style.bottom = "100px";
+    modal.style.bottom = "150px";
     modal.style.right = "20px";
     modal.style.width = "360px";
     modal.style.height = "600px";
@@ -114,11 +146,16 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!modalOpen) {
         closePopup();
 
-        console.log("Sending email to iframe", window.customerEmail);
-
         if (window.customerEmail) {
           iframe.contentWindow.postMessage(
             { email: window.customerEmail },
+            "*"
+          );
+        }
+
+        if (offerData) {
+          iframe.contentWindow.postMessage(
+            { offerData: offerData, productId: window.productId },
             "*"
           );
         }
@@ -178,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         modalOpen = false;
         if (offerData) {
-          showPopup();
+          showOfferPopup();
         }
       }, 100);
 
@@ -225,95 +262,112 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = event.data.url;
       }
     });
+  }
 
-    async function fetchOfferData() {
-      try {
-        const productIds = [window.productId];
-        const queryParams = new URLSearchParams({
-          productIds: JSON.stringify(productIds),
-        });
-        const url = `https://api.meappbounty.com/brand/redemption-methods/get-by-product-ids?${queryParams}`;
+  async function fetchOfferData(apiKey) {
+    try {
+      const productIds = [window.productId];
+      const queryParams = new URLSearchParams({
+        productIds: JSON.stringify(productIds),
+      });
+      const url = `https://api.meappbounty.com/brand/redemption-methods/get-by-product-ids?${queryParams}`;
 
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          method: "GET",
-        });
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        method: "GET",
+      });
 
-        if (response.ok) {
-          const res = await response.json();
-          offerData = res.data?.[0];
+      if (response.ok) {
+        const res = await response.json();
+        offerData = res.data?.[0];
 
-          if (offerData) {
-            showPopup();
-            updateIframeUrl();
-          }
-        } else {
-          console.error("Failed to fetch offer data");
+        if (offerData) {
+          showOfferPopup();
+          initialize();
         }
-      } catch (error) {
-        console.error("Error fetching offer data:", error);
+      } else {
+        console.error("Failed to fetch offer data");
       }
+    } catch (error) {
+      console.error("Error fetching offer data:", error);
     }
+  }
 
-    function updateIframeUrl() {
-      iframe.src = constructIframeUrl();
-    }
+  function showOfferPopup() {
+    if (popupVisible) return;
 
-    function showPopup() {
-      if (popupVisible) return;
+    const popup = document.createElement("div");
+    popup.id = "special-offer-popup";
+    popup.style.position = "fixed";
+    popup.style.bottom = "100px";
+    popup.style.right = "20px";
+    popup.style.borderRadius = "12px";
+    popup.style.zIndex = "1000";
+    // popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+    popup.style.cursor = "pointer";
 
-      const popup = document.createElement("div");
-      popup.id = "special-offer-popup";
-      popup.style.position = "fixed";
-      popup.style.bottom = "90px";
-      popup.style.right = "20px";
-      // popup.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-      popup.style.color = "#fff";
-      // popup.style.padding = "10px 20px";
-      popup.style.borderRadius = "8px";
-      popup.style.zIndex = "1002";
-      // popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-      popup.style.cursor = "pointer";
-
-      const popupText = document.createElement("span");
-      popupText.innerHTML = `
-        <div style="background-color: #5434F6; color: #fff; border-radius: 35px; border-bottom-right-radius: 6px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 300px; padding: 20px; display: flex; align-items: center; gap: 20px;">
+    const popupText = document.createElement("span");
+    popupText.innerHTML = `
+        <div style="background-color: #fff; color: #000; border-radius: 12px; box-shadow: 0 8px 26px 0 rgba(0, 18, 46, 0.16); max-width: 340px; padding: 20px; display: flex; align-items: center; flex-direction: column; gap: 20px;">
+          <img src="https://tidio-images-messenger.s3.amazonaws.com/syow1wpcd4vnrtfogriakjlqfr3nee0g/images/4b207885-48d2-46f9-abe4-67229ac89423.gif" style="height: 200px; width: 100%; object-fit: cover;" />
           <div>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#fff" style="width: 50px; height: 50px; color: #000;">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-            </svg>
-          </div>
-          <div>
-            <h3 style="font-size: 16px; color: #fff;">Redeem Your Coupon</h3>
-            <p style="font-size: 14px; margin-top: 5px; color: #fff;">Use your coupon to get a discount on this product.</p>
+            <h3 style="font-size: 18px;">${getOfferDescription(
+              offerData
+            )} 🎁</h3>
+            <p style="font-size: 16px; margin-top: 5px; color: font-weight: light; color: #ACB0B9;">Use your coupon to get a discount on this product. Click on the reward button to get started!</p>
           </div>
         </div>
       `;
-      popup.appendChild(popupText);
+    popup.appendChild(popupText);
 
-      document.body.appendChild(popup);
-      popupVisible = true;
+    document.body.appendChild(popup);
+    popupVisible = true;
+  }
 
-      button.addEventListener("click", function () {
-        if (popupVisible) {
-          closePopup();
-        }
-      });
-    }
-
-    function closePopup() {
-      const popup = document.getElementById("special-offer-popup");
-      if (popup) {
-        document.body.removeChild(popup);
-        popupVisible = false;
-      }
-    }
-
-    if (window.productId) {
-      fetchOfferData();
+  function closePopup() {
+    const popup = document.getElementById("special-offer-popup");
+    if (popup) {
+      document.body.removeChild(popup);
+      popupVisible = false;
     }
   }
 });
+
+// Modules
+function lightenColor(color, percent) {
+  const num = parseInt(color.replace("#", ""), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = (num >> 16) + amt;
+  const G = ((num >> 8) & 0x00ff) + amt;
+  const B = (num & 0x0000ff) + amt;
+
+  const newColor = (
+    0x1000000 +
+    (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+    (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+    (B < 255 ? (B < 1 ? 0 : B) : 255)
+  )
+    .toString(16)
+    .slice(1)
+    .toUpperCase();
+
+  return `#${newColor}`;
+}
+
+const getOfferDescription = (redeemMethod) => {
+  switch (redeemMethod?.type) {
+    case "FREE_SHIPPING":
+      return `Get free shipping on this product`;
+    case "FIXED_AMOUNT_OFF":
+      return `Get $${redeemMethod?.discountAmount} off on this product`;
+    case "VARIABLE_AMOUNT_OFF":
+      return `Get $${redeemMethod?.discountAmount} off on this product`;
+    case "FIXED_PERCENTAGE_OFF":
+      return `Get ${redeemMethod?.discountPercentage}% off on this product`;
+    default:
+      return "";
+  }
+};
