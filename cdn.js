@@ -49,6 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const color1 = brandData.data?.brandPrimaryColor ?? "#000000";
     const color2 = lightenColor(color1, 10);
+    const isRight =
+      brandData?.data?.brandRewardButtonPosition === "bottom_right";
 
     function constructIframeUrl() {
       return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
@@ -57,11 +59,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const button = document.createElement("button");
     button.style.position = "fixed";
     button.style.bottom = "20px";
-    button.style.right = "20px";
+    // position button
+
+    if (isRight) {
+      button.style.right = "20px";
+    } else {
+      button.style.left = "20px";
+    }
+
     button.style.height = "60px";
     button.style.width = "130px";
     button.style.borderRadius = "100px";
-    // background should be gradient
     button.style.background = `linear-gradient(90deg, ${color2} 0%, ${color1} 100%)`;
     button.style.boxShadow = "0 8px 26px 0 rgba(0, 18, 46, 0.16)";
     button.style.color = "#fff";
@@ -110,7 +118,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.createElement("div");
     modal.style.position = "fixed";
     modal.style.bottom = "150px";
-    modal.style.right = "20px";
+    if (isRight) {
+      modal.style.right = "20px";
+    } else {
+      modal.style.left = "20px";
+    }
     modal.style.width = "360px";
     modal.style.height = "600px";
     modal.style.padding = "0";
