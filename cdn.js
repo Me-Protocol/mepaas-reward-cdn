@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function constructIframeUrl() {
-      return `http://localhost:3000?apiKey=${apiKey}`;
+      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
     }
 
     const brandRes = await fetch(
