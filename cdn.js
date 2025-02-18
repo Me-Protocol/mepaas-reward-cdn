@@ -1,4 +1,5 @@
 let popupVisible = false;
+let popupClosed = false;
 let offerData = null;
 let iframe = null;
 let apiKey = null;
@@ -32,7 +33,9 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // make api call to get brand details before showing the rewards button
+    function constructIframeUrl() {
+      return `http://localhost:3000?apiKey=${apiKey}`;
+    }
 
     const brandRes = await fetch(
       "https://paas.meappbounty.com/v1/api/auth/sdk/public-key",
@@ -52,102 +55,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const isRight =
       brandData?.data?.brandRewardButtonPosition === "bottom_right";
 
-    function constructIframeUrl() {
-      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
-    }
-
     const button = document.createElement("button");
-    button.style.position = "fixed";
-    button.style.bottom = "20px";
-    // position button
-
-    if (isRight) {
-      button.style.right = "20px";
-    } else {
-      button.style.left = "20px";
-    }
-
-    button.style.height = "60px";
-    button.style.width = "130px";
-    button.style.borderRadius = "100px";
     button.style.background = `linear-gradient(90deg, ${color2} 0%, ${color1} 100%)`;
-    button.style.boxShadow = "0 8px 26px 0 rgba(0, 18, 46, 0.16)";
-    button.style.color = "#fff";
-    button.style.border = "none";
-    button.style.cursor = "pointer";
-    button.style.zIndex = "1500";
-    button.style.fontSize = "14px";
-    button.style.display = "flex";
-    button.style.alignItems = "center";
-    button.style.justifyContent = "center";
-    button.style.gap = "8px";
-    button.style.transition = "all 0.1s linear";
-    button.style.overflow = "hidden";
-
-    const buttonText = document.createElement("span");
-    buttonText.innerText = "Rewards";
-
-    const svgIcon = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "svg"
-    );
-    svgIcon.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    svgIcon.setAttribute("fill", "none");
-    svgIcon.setAttribute("viewBox", "0 0 24 24");
-    svgIcon.setAttribute("stroke-width", "1.5");
-    svgIcon.setAttribute("stroke", "currentColor");
-    svgIcon.style.height = "24px";
-    svgIcon.style.width = "24px";
-    svgIcon.style.color = "#fff";
-
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("stroke-linecap", "round");
-    path.setAttribute("stroke-linejoin", "round");
-    path.setAttribute(
-      "d",
-      "M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
-    );
-
-    svgIcon.appendChild(path);
-    button.appendChild(svgIcon);
-    button.appendChild(buttonText);
-    document.body.appendChild(button);
+    button.classList.add("me-rewards-button");
+    button.classList.add(isRight ? "right-side" : "left-side");
+    button.innerHTML = `
+      <span>Get Reward</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+      </svg>
+    `;
 
     let modalOpen = false;
 
     const modal = document.createElement("div");
-    modal.style.position = "fixed";
-    modal.style.bottom = "150px";
-    if (isRight) {
-      modal.style.right = "20px";
-    } else {
-      modal.style.left = "20px";
-    }
-    modal.style.width = "360px";
-    modal.style.height = "600px";
-    modal.style.padding = "0";
-    modal.style.backgroundColor = "#fff";
-    modal.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-    modal.style.borderRadius = "12px";
-    modal.style.zIndex = "1001";
-    modal.style.display = "none";
-    modal.style.flexDirection = "column";
-    modal.style.alignItems = "flex-end";
-    modal.style.transform = "translateY(20px)";
-    modal.style.opacity = "0";
-    modal.style.transition = "transform 0.4s ease, opacity 0.4s ease";
-    modal.style.overflow = "hidden";
-
+    modal.classList.add("me-paas-modal");
+    modal.classList.add(isRight ? "right-side" : "left-side");
     iframe = document.createElement("iframe");
     iframe.src = constructIframeUrl();
     iframe.allow = "clipboard-write";
     iframe.sandbox = "allow-scripts allow-same-origin";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
 
     modal.appendChild(iframe);
-    document.body.appendChild(modal);
+    ME_PAAS_CONTAINER.appendChild(modal);
+    ME_PAAS_CONTAINER.appendChild(button);
 
     iframe.onload = function () {
       console.log("Sending api key to iframe", apiKey);
@@ -164,7 +95,6 @@ document.addEventListener("DOMContentLoaded", function () {
             "*"
           );
         }
-
         if (offerData) {
           iframe.contentWindow.postMessage(
             { offerData: offerData, productId: window.productId },
@@ -172,43 +102,8 @@ document.addEventListener("DOMContentLoaded", function () {
           );
         }
 
-        modal.style.display = "flex";
-        setTimeout(() => {
-          modal.style.transform = "translateY(0)";
-          modal.style.opacity = "1";
-        }, 10);
-
-        if (window.innerWidth <= 768) {
-          button.style.display = "none";
-        }
-
-        button.innerText = "";
-
-        const closeIcon = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "svg"
-        );
-        closeIcon.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        closeIcon.setAttribute("fill", "none");
-        closeIcon.setAttribute("viewBox", "0 0 24 24");
-        closeIcon.setAttribute("stroke-width", "1.5");
-        closeIcon.setAttribute("stroke", "currentColor");
-        closeIcon.style.height = "24px";
-        closeIcon.style.width = "24px";
-        closeIcon.style.color = "#fff";
-
-        const closePath = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "path"
-        );
-        closePath.setAttribute("stroke-linecap", "round");
-        closePath.setAttribute("stroke-linejoin", "round");
-        closePath.setAttribute("d", "M6 18 18 6M6 6l12 12");
-
-        closeIcon.appendChild(closePath);
-        button.appendChild(closeIcon);
-
-        button.style.width = "60px";
+        modal.classList.add("active");
+        button.classList.add("active");
 
         modalOpen = true;
       } else {
@@ -217,51 +112,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const closeModal = function () {
-      modal.style.transform = "translateY(20px)";
-      modal.style.opacity = "0";
+      modal.classList.remove("active");
+      button.classList.remove("active");
 
       setTimeout(() => {
-        modal.style.display = "none";
-        if (window.innerWidth <= 768) {
-          button.style.display = "flex";
-        }
         modalOpen = false;
         if (offerData) {
           showOfferPopup();
         }
       }, 100);
-
-      button.innerHTML = "";
-      button.appendChild(svgIcon);
-      button.appendChild(buttonText);
-      button.style.width = "130px";
     };
-
-    const mediaQuery = window.matchMedia("(max-width: 768px)");
-    function handleMediaQueryChange(e) {
-      if (e.matches) {
-        modal.style.width = "100%";
-        modal.style.height = "100%";
-        modal.style.bottom = "0";
-        modal.style.right = "0";
-        modal.style.borderRadius = "0";
-        if (modalOpen) {
-          button.style.display = "none";
-        } else {
-          button.style.display = "flex";
-        }
-      } else {
-        modal.style.width = "400px";
-        modal.style.height = "600px";
-        modal.style.bottom = "100px";
-        modal.style.right = "20px";
-        modal.style.borderRadius = "12px";
-        button.style.display = "flex";
-      }
-    }
-
-    mediaQuery.addListener(handleMediaQueryChange);
-    handleMediaQueryChange(mediaQuery);
 
     window.addEventListener("message", function (event) {
       if (event.data.action === "goToSignUp") {
@@ -294,12 +154,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (response.ok) {
         const res = await response.json();
-        offerData = res.data?.[0];
+        offerData = res?.data?.[0];
 
         if (offerData) {
           showOfferPopup();
-          initialize();
         }
+        initialize();
       } else {
         console.error("Failed to fetch offer data");
       }
@@ -310,40 +170,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function showOfferPopup() {
     if (popupVisible) return;
+    if (popupClosed) return;
 
-    const popup = document.createElement("div");
-    popup.id = "special-offer-popup";
-    popup.style.position = "fixed";
-    popup.style.bottom = "100px";
-    popup.style.right = "20px";
-    popup.style.borderRadius = "12px";
-    popup.style.zIndex = "1000";
-    // popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-    popup.style.cursor = "pointer";
-
-    const popupText = document.createElement("span");
-    popupText.innerHTML = `
-        <div style="background-color: #fff; color: #000; border-radius: 12px; box-shadow: 0 8px 26px 0 rgba(0, 18, 46, 0.16); max-width: 340px; padding: 20px; display: flex; align-items: center; flex-direction: column; gap: 20px;">
-          <img src="https://tidio-images-messenger.s3.amazonaws.com/syow1wpcd4vnrtfogriakjlqfr3nee0g/images/4b207885-48d2-46f9-abe4-67229ac89423.gif" style="height: 200px; width: 100%; object-fit: cover;" />
+    const OFFER_POPUP = document.createElement("div");
+    OFFER_POPUP.classList.add("me-special-offer-popup");
+    OFFER_POPUP.innerHTML = `
+        <div class="me-special-offer-popup">
+          <button id="me-offer-popup-close-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+              <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+            </svg>
+          </button>
+          <img src="https://tidio-images-messenger.s3.amazonaws.com/syow1wpcd4vnrtfogriakjlqfr3nee0g/images/4b207885-48d2-46f9-abe4-67229ac89423.gif"/>
           <div>
-            <h3 style="font-size: 18px;">${getOfferDescription(
-              offerData
-            )} 🎁</h3>
-            <p style="font-size: 16px; margin-top: 5px; color: font-weight: light; color: #ACB0B9;">Use your coupon to get a discount on this product. Click on the reward button to get started!</p>
+            <h3>${getOfferDescription(offerData)} 🎁</h3>
+            <p>Use your coupon to get a discount on this product. Click on the reward button to get started!</p>
           </div>
         </div>
-      `;
-    popup.appendChild(popupText);
+    `;
 
-    document.body.appendChild(popup);
+    ME_PAAS_CONTAINER.appendChild(OFFER_POPUP);
+    document
+      .getElementById("me-offer-popup-close-button")
+      .addEventListener("click", function () {
+        popupClosed = true;
+        offerData = null;
+        closePopup();
+      });
     popupVisible = true;
   }
 
   function closePopup() {
-    const popup = document.getElementById("special-offer-popup");
+    const popup = document.querySelector(".me-special-offer-popup");
     if (popup) {
-      document.body.removeChild(popup);
-      popupVisible = false;
+      popup.classList.add("hidden");
+      setTimeout(() => {
+        popup.remove();
+        popupVisible = false;
+      }, 100);
     }
   }
 });
@@ -383,3 +247,177 @@ const getOfferDescription = (redeemMethod) => {
       return "";
   }
 };
+
+// Container for the PAAS
+const ME_PAAS_CONTAINER = document.createElement("div");
+ME_PAAS_CONTAINER.id = "me-paas-container";
+document.body.appendChild(ME_PAAS_CONTAINER);
+
+// Style for the PAAS
+const ME_PAAS_CONTAINER_STYLE = `
+    @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
+    #me-paas-container {
+      font-family: 'Inter Tight', sans-serif;
+    }
+    .me-special-offer-popup {
+      background-color: #fff;
+      color: #000;
+      border-radius: 12px;
+      box-shadow: 0 8px 26px 0 rgba(0, 18, 46, 0.16);
+      max-width: 340px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      gap: 20px;
+      transition: all 0.1s ease;
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .me-special-offer-popup img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .me-special-offer-popup h3 {
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Inter Tight', sans-serif;
+    }
+    .me-special-offer-popup p {
+      font-size: 14px;
+      font-weight: 400;
+      color: #666666;
+      font-family: 'Inter Tight', sans-serif;
+      margin-top: 5px;
+    }
+    #me-offer-popup-close-button {
+      background-color: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      width: 24px;
+      height: 24px;
+      color: #000;
+      position: absolute;
+      top: -30px;
+      right: 0;
+      transition: all 0.1s ease;
+      opacity: 0;
+    }
+    .me-special-offer-popup:hover #me-offer-popup-close-button {
+      opacity: 1;
+    }
+    .hidden {
+      display: none;
+    }
+    .me-paas-modal {
+      position: fixed;
+      bottom: 100px;
+      z-index: 1000;
+      width: 360px;
+      height: 600px;
+      padding: 0;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.4s ease;
+      overflow: hidden;
+      visibility: hidden;
+    }
+    .me-paas-modal.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .me-paas-modal iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .right-side {
+      right: 20px;
+    }
+    .left-side {
+      left: 20px;
+    }
+    .me-rewards-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 130px;
+      height: 60px;
+      border-radius: 100px;
+      background-color: #000;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      position: fixed;
+      bottom: 20px;
+      border: none;
+      transition: all 0.1s ease;
+    }
+    .me-rewards-button span {
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter Tight', sans-serif;
+      position: absolute;
+      transition: all 0.1s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+    .me-rewards-button svg {
+      width: 24px;
+      height: 24px;
+      position: absolute;
+      transition: all 0.1s ease;
+      opacity: 0;
+      visibility: hidden;
+    }
+    .me-rewards-button:hover {
+      opacity: 0.8;
+    }
+    .me-rewards-button.active {
+      width: 60px;
+    }
+    .me-rewards-button.active span {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .me-rewards-button.active svg {
+      opacity: 1;
+      visibility: visible;
+    }
+    @media (max-width: 768px) {
+      #me-offer-popup-close-button {
+        opacity: 1;
+        visibility: visible;
+      }
+      .me-paas-modal {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        position: fixed;
+        right: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        top: 0 !important;
+      }
+      .me-rewards-button.active {
+        display: none;
+      }
+    }
+`;
+document.head.appendChild(document.createElement("style")).textContent =
+  ME_PAAS_CONTAINER_STYLE;
