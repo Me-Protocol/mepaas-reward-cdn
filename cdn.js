@@ -5,6 +5,11 @@ let iframe = null;
 let apiKey = null;
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Container for the PAAS
+  const ME_PAAS_CONTAINER = document.createElement("div");
+  ME_PAAS_CONTAINER.id = "me-paas-container";
+  document.body.appendChild(ME_PAAS_CONTAINER);
+
   const scriptTag = document.getElementById("mepaas-rewards");
   const grabApiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
 
@@ -59,12 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
     button.style.background = `linear-gradient(90deg, ${color2} 0%, ${color1} 100%)`;
     button.classList.add("me-rewards-button");
     button.classList.add(isRight ? "right-side" : "left-side");
-    button.innerHTML = `
-      <span>Get Reward</span>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
-        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-      </svg>
-    `;
+    button.innerHTML = `<span>Rewards</span>`;
 
     let modalOpen = false;
 
@@ -248,11 +248,6 @@ const getOfferDescription = (redeemMethod) => {
   }
 };
 
-// Container for the PAAS
-const ME_PAAS_CONTAINER = document.createElement("div");
-ME_PAAS_CONTAINER.id = "me-paas-container";
-document.body.appendChild(ME_PAAS_CONTAINER);
-
 // Style for the PAAS
 const ME_PAAS_CONTAINER_STYLE = `
     @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
@@ -274,7 +269,7 @@ const ME_PAAS_CONTAINER_STYLE = `
       position: fixed;
       bottom: 100px;
       right: 20px;
-      z-index: 1000;
+      z-index: 999999999 !important;
     }
     .me-special-offer-popup img {
       width: 100%;
@@ -318,10 +313,10 @@ const ME_PAAS_CONTAINER_STYLE = `
     }
     .me-paas-modal {
       position: fixed;
-      bottom: 100px;
-      z-index: 1000;
-      width: 360px;
-      height: 600px;
+      bottom: 20px;
+      z-index: 999999999 !important;
+      width: 372px;
+      height: 700px;
       padding: 0;
       background-color: #fff;
       border-radius: 12px;
@@ -367,37 +362,23 @@ const ME_PAAS_CONTAINER_STYLE = `
       bottom: 20px;
       border: none;
       transition: all 0.1s ease;
+      transform: translateY(0px);
+      opacity: 1;
+      visibility: visible;
+      z-index: 999999999 !important;
     }
     .me-rewards-button span {
       font-size: 14px;
       font-weight: 600;
       font-family: 'Inter Tight', sans-serif;
-      position: absolute;
-      transition: all 0.1s ease;
-      opacity: 1;
-      visibility: visible;
-    }
-    .me-rewards-button svg {
-      width: 24px;
-      height: 24px;
-      position: absolute;
-      transition: all 0.1s ease;
-      opacity: 0;
-      visibility: hidden;
     }
     .me-rewards-button:hover {
       opacity: 0.8;
     }
     .me-rewards-button.active {
-      width: 60px;
-    }
-    .me-rewards-button.active span {
+      transform: translateY(10px);
       opacity: 0;
       visibility: hidden;
-    }
-    .me-rewards-button.active svg {
-      opacity: 1;
-      visibility: visible;
     }
     @media (max-width: 768px) {
       #me-offer-popup-close-button {
@@ -414,8 +395,11 @@ const ME_PAAS_CONTAINER_STYLE = `
         bottom: 0 !important;
         top: 0 !important;
       }
-      .me-rewards-button.active {
-        display: none;
+    }
+    @media (max-height: 700px) {
+      .me-paas-modal {
+        height: calc(100vh - 50px);
+        width: 360px;
       }
     }
 `;
