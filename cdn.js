@@ -54,6 +54,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const button = document.createElement("button");
     button.style.background = `linear-gradient(90deg, ${color2} 0%, ${color1} 100%)`;
+    // onhover reverse the gradient
+    button.addEventListener("mouseover", function () {
+      button.style.background = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
+    });
+    button.addEventListener("mouseout", function () {
+      button.style.background = `linear-gradient(90deg, ${color2} 0%, ${color1} 100%)`;
+    });
     button.classList.add("me-rewards-button");
     button.classList.add(isRight ? "right-side" : "left-side");
     button.innerHTML = `<span>Rewards</span>`;
@@ -364,9 +371,6 @@ const ME_PAAS_CONTAINER_STYLE = `
       font-size: 14px;
       font-weight: 600;
       font-family: 'Inter Tight', sans-serif;
-    }
-    .me-rewards-button:hover {
-      opacity: 0.8;
     }
     .me-rewards-button.active {
       transform: translateY(10px);
