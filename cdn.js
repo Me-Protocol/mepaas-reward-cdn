@@ -1,8 +1,6 @@
 let popupVisible = false;
 let popupClosed = false;
 let offerData = null;
-let iframe = null;
-let apiKey = null;
 
 document.addEventListener("DOMContentLoaded", function () {
   // Container for the PAAS
@@ -10,30 +8,22 @@ document.addEventListener("DOMContentLoaded", function () {
   ME_PAAS_CONTAINER.id = "me-paas-container";
   document.body.appendChild(ME_PAAS_CONTAINER);
 
-  console.log("GRAB API KEY", grabApiKey);
-
   const scriptTag = document.getElementById("mepaas-rewards");
-  const grabApiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
+  const apiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
+  const productId = scriptTag
+    ? scriptTag?.getAttribute("product-id")
+    : window.productId;
+  const customerEmail = scriptTag
+    ? scriptTag?.getAttribute("customer-email")
+    : window.customerEmail;
 
-  const checkApiKeyInterval = setInterval(() => {
-    if (grabApiKey) {
-      apiKey = grabApiKey;
-      clearInterval(checkApiKeyInterval);
-      if (!window.productId) {
-        initialize();
-      } else {
-        fetchOfferData(apiKey);
-      }
-    } else if (window.apiKey) {
-      apiKey = window.apiKey;
-      clearInterval(checkApiKeyInterval);
-      if (!window.productId) {
-        initialize();
-      } else {
-        fetchOfferData(apiKey);
-      }
-    }
-  }, 1000);
+  console.log("GRAB API KEY", apiKey, productId, customerEmail);
+
+  if (productId) {
+    fetchOfferData();
+  } else {
+    initialize();
+  }
 
   async function initialize() {
     if (!apiKey) {
@@ -41,11 +31,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function constructIframeUrl() {
-      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
+      return `${APP_SETTINGS.iframeUrl}?apiKey=${apiKey}`;
     }
 
     const brandRes = await fetch(
-      "https://paas.meappbounty.com/v1/api/auth/sdk/public-key",
+      `${APP_SETTINGS.paasApiUrl}/auth/sdk/public-key`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -73,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.createElement("div");
     modal.classList.add("me-paas-modal");
     modal.classList.add(isRight ? "right-side" : "left-side");
-    iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
     iframe.src = constructIframeUrl();
     iframe.allow = "clipboard-write";
     iframe.sandbox = "allow-scripts allow-same-origin";
@@ -83,23 +73,22 @@ document.addEventListener("DOMContentLoaded", function () {
     ME_PAAS_CONTAINER.appendChild(button);
 
     iframe.onload = function () {
-      console.log("Sending api key to iframe", apiKey);
-      iframe.contentWindow.postMessage({ apiKey: apiKey }, "*");
+      iframe.contentWindow.postMessage(
+        { apiKey: apiKey, email: customerEmail },
+        "*"
+      );
     };
 
     button.addEventListener("click", function () {
       if (!modalOpen) {
         closePopup();
 
-        if (window.customerEmail) {
-          iframe.contentWindow.postMessage(
-            { email: window.customerEmail },
-            "*"
-          );
+        if (customerEmail) {
+          iframe.contentWindow.postMessage({ email: customerEmail }, "*");
         }
         if (offerData) {
           iframe.contentWindow.postMessage(
-            { offerData: offerData, productId: window.productId },
+            { offerData: offerData, productId: productId },
             "*"
           );
         }
@@ -138,21 +127,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  async function fetchOfferData(apiKey) {
+  async function fetchOfferData() {
     try {
-      const productIds = [window.productId];
+      const productIds = [productId];
       const queryParams = new URLSearchParams({
         productIds: JSON.stringify(productIds),
       });
-      const url = `https://api.meappbounty.com/brand/redemption-methods/get-by-product-ids?${queryParams}`;
 
-      const response = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        method: "GET",
-      });
+      const response = await fetch(
+        `${APP_SETTINGS.businessApiUrl}/brand/redemption-methods/get-by-product-ids?${queryParams}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          method: "GET",
+        }
+      );
 
       if (response.ok) {
         const res = await response.json();
@@ -407,3 +398,9 @@ const ME_PAAS_CONTAINER_STYLE = `
 `;
 document.head.appendChild(document.createElement("style")).textContent =
   ME_PAAS_CONTAINER_STYLE;
+
+const APP_SETTINGS = {
+  iframeUrl: "https://mepass-rewards-dev.vercel.app",
+  paasApiUrl: "https://paas.meappbounty.com/v1/api",
+  businessApiUrl: "https://api.meappbounty.com",
+};
