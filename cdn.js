@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
   ME_PAAS_CONTAINER.id = "me-paas-container";
   document.body.appendChild(ME_PAAS_CONTAINER);
 
+  console.log("GRAB API KEY", grabApiKey);
+
   const scriptTag = document.getElementById("mepaas-rewards");
   const grabApiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
 
