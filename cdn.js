@@ -39,11 +39,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function constructIframeUrl() {
-      return `https://mepass-rewards-dev.vercel.app?apiKey=${apiKey}`;
+      return `https://mepass-rewards-staging.vercel.app?apiKey=${apiKey}`;
     }
 
     const brandRes = await fetch(
-      "https://paas.meappbounty.com/v1/api/auth/sdk/public-key",
+      "https://paas.usemeprotocol.com/v1/api/auth/sdk/public-key",
       {
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const queryParams = new URLSearchParams({
         productIds: JSON.stringify(productIds),
       });
-      const url = `https://api.meappbounty.com/brand/redemption-methods/get-by-product-ids?${queryParams}`;
+      const url = `https://api.usemeprotocol.com/brand/redemption-methods/get-by-product-ids?${queryParams}`;
 
       const response = await fetch(url, {
         headers: {
