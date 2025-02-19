@@ -129,7 +129,9 @@ document.addEventListener("DOMContentLoaded", function () {
       } else if (event.data.action === "closeModal") {
         closeModal();
       } else if (event.data.action === "openPage") {
-        window.location.href = event.data.url;
+        // window.location.href = event.data.url;
+        // go to url and also preserve the query params
+        window.location.href = `${event.data.url}${window.location.search}`;
       }
     });
   }
@@ -403,8 +405,26 @@ const ME_PAAS_CONTAINER_STYLE = `
 document.head.appendChild(document.createElement("style")).textContent =
   ME_PAAS_CONTAINER_STYLE;
 
+// get env from search query
+const env = new URLSearchParams(window.location.search).get("env") ?? "dev";
+
 const APP_SETTINGS = {
-  iframeUrl: "https://mepass-rewards-dev.vercel.app",
-  paasApiUrl: "https://paas.meappbounty.com/v1/api",
-  businessApiUrl: "https://api.meappbounty.com",
+  iframeUrl:
+    env === "dev"
+      ? "https://mepass-rewards-dev.vercel.app"
+      : env === "staging"
+      ? "https://mepass-rewards-staging.vercel.app"
+      : "https://mepass-rewards.vercel.app",
+  paasApiUrl:
+    env === "dev"
+      ? "https://paas.meappbounty.com/v1/api"
+      : env === "staging"
+      ? "https://paas.usemeprotocol.com/v1/api"
+      : "https://paas.memarketplace.io/v1/api",
+  businessApiUrl:
+    env === "dev"
+      ? "https://api.meappbounty.com"
+      : env === "staging"
+      ? "https://api.usemeprotocol.com"
+      : "https://api.memarketplace.io",
 };
