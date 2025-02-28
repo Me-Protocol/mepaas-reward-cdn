@@ -1,6 +1,8 @@
 let popupVisible = false;
 let popupClosed = false;
 let offerData = null;
+let env = "dev";
+let APP_SETTINGS;
 
 document.addEventListener("DOMContentLoaded", function () {
   // Container for the PAAS
@@ -10,10 +12,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const scriptTag = document.getElementById("mepaas-rewards");
   const apiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
-  const productId = scriptTag
+  const scriptTagProductId = scriptTag?.getAttribute("product-id");
+  const scriptTagCustomerEmail = scriptTag?.getAttribute("customer-email");
+  env = scriptTag ? scriptTag?.getAttribute("env") : "dev";
+
+  APP_SETTINGS = {
+    iframeUrl:
+      env === "dev"
+        ? "https://mepass-rewards-dev.vercel.app"
+        : env === "staging"
+        ? "https://mepass-rewards-staging.vercel.app"
+        : "https://mepass-rewards.vercel.app",
+    paasApiUrl:
+      env === "dev"
+        ? "https://paas.meappbounty.com/v1/api"
+        : env === "staging"
+        ? "https://paas.usemeprotocol.com/v1/api"
+        : "https://paas.memarketplace.io/v1/api",
+    businessApiUrl:
+      env === "dev"
+        ? "https://api.meappbounty.com"
+        : env === "staging"
+        ? "https://api.usemeprotocol.com"
+        : "https://api.memarketplace.io",
+  };
+
+  const productId = scriptTagProductId
     ? scriptTag?.getAttribute("product-id")
     : window.productId;
-  const customerEmail = scriptTag
+  const customerEmail = scriptTagCustomerEmail
     ? scriptTag?.getAttribute("customer-email")
     : window.customerEmail;
 
@@ -306,6 +333,9 @@ const ME_PAAS_CONTAINER_STYLE = `
       right: 0;
       transition: all 0.1s ease;
       opacity: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .me-special-offer-popup:hover #me-offer-popup-close-button {
       opacity: 1;
@@ -404,27 +434,3 @@ const ME_PAAS_CONTAINER_STYLE = `
 `;
 document.head.appendChild(document.createElement("style")).textContent =
   ME_PAAS_CONTAINER_STYLE;
-
-// get env from search query
-const env = new URLSearchParams(window.location.search).get("env") ?? "dev";
-
-const APP_SETTINGS = {
-  iframeUrl:
-    env === "dev"
-      ? "https://mepass-rewards-dev.vercel.app"
-      : env === "staging"
-      ? "https://mepass-rewards-staging.vercel.app"
-      : "https://mepass-rewards.vercel.app",
-  paasApiUrl:
-    env === "dev"
-      ? "https://paas.meappbounty.com/v1/api"
-      : env === "staging"
-      ? "https://paas.usemeprotocol.com/v1/api"
-      : "https://paas.memarketplace.io/v1/api",
-  businessApiUrl:
-    env === "dev"
-      ? "https://api.meappbounty.com"
-      : env === "staging"
-      ? "https://api.usemeprotocol.com"
-      : "https://api.memarketplace.io",
-};
