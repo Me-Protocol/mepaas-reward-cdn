@@ -58,7 +58,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function constructIframeUrl() {
-      return `${APP_SETTINGS.iframeUrl}?apiKey=${apiKey}`;
+      return `${
+        APP_SETTINGS.iframeUrl
+      }?apiKey=${apiKey}${customerEmail ? `&email=${customerEmail}` : ""}${productId ? `&productId=${productId}` : ""}${offerData ? `&offerData=${JSON.stringify(offerData)}` : ""}`;
     }
 
     const brandRes = await fetch(
