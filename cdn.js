@@ -18,19 +18,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
   APP_SETTINGS = {
     iframeUrl:
-      env === "dev"
+      env === "local"
+        ? "http://localhost:3000"
+        : env === "development"
         ? "https://mepass-rewards-dev.vercel.app"
         : env === "staging"
         ? "https://mepass-rewards-staging.vercel.app"
         : "https://mepass-rewards.vercel.app",
     paasApiUrl:
-      env === "dev"
+      env === "local"
+        ? "https://paas.meappbounty.com/v1/api"
+        : env === "development"
         ? "https://paas.meappbounty.com/v1/api"
         : env === "staging"
         ? "https://paas.usemeprotocol.com/v1/api"
         : "https://paas.memarketplace.io/v1/api",
     businessApiUrl:
-      env === "dev"
+      env === "local"
+        ? "https://api.meappbounty.com"
+        : env === "development"
         ? "https://api.meappbounty.com"
         : env === "staging"
         ? "https://api.usemeprotocol.com"
@@ -44,7 +50,13 @@ document.addEventListener("DOMContentLoaded", function () {
     ? scriptTag?.getAttribute("customer-email")
     : window.customerEmail;
 
-  console.log("GRAB API KEY", apiKey, productId, customerEmail);
+  console.log(
+    "GRAB API KEY AND ENV",
+    scriptTag?.getAttribute("env"),
+    apiKey,
+    productId,
+    customerEmail
+  );
 
   if (productId) {
     fetchOfferData();
