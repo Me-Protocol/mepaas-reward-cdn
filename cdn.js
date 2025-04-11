@@ -16,6 +16,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const scriptTagCustomerEmail = scriptTag?.getAttribute("customer-email");
   env = scriptTag ? scriptTag?.getAttribute("env") : "dev";
 
+  console.log(
+    "GRAB API KEY AND ENV",
+    scriptTag?.getAttribute("env"),
+    apiKey,
+    productId,
+    customerEmail
+  );
+
   APP_SETTINGS = {
     iframeUrl:
       env === "local"
@@ -49,14 +57,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const customerEmail = scriptTagCustomerEmail
     ? scriptTag?.getAttribute("customer-email")
     : window.customerEmail;
-
-  console.log(
-    "GRAB API KEY AND ENV",
-    scriptTag?.getAttribute("env"),
-    apiKey,
-    productId,
-    customerEmail
-  );
 
   if (productId) {
     fetchOfferData();
