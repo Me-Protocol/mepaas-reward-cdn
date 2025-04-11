@@ -16,13 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const scriptTagCustomerEmail = scriptTag?.getAttribute("customer-email");
   env = scriptTag ? scriptTag?.getAttribute("env") : "dev";
 
-  console.log(
-    "GRAB API KEY AND ENV",
-    scriptTag?.getAttribute("env"),
-    apiKey,
-    productId,
-    customerEmail
-  );
+  console.log("GRAB API KEY AND ENV", scriptTag?.getAttribute("env"), apiKey);
 
   APP_SETTINGS = {
     iframeUrl:
