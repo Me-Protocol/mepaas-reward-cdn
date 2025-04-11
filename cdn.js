@@ -271,6 +271,10 @@ function lightenColor(color, percent) {
 }
 
 const getOfferDescription = (redeemMethod) => {
+  const discountPercentage = Number(redeemMethod?.discountPercentage).toFixed(
+    0
+  );
+
   switch (redeemMethod?.type) {
     case "FREE_SHIPPING":
       return `Get free shipping on this product`;
@@ -279,7 +283,9 @@ const getOfferDescription = (redeemMethod) => {
     case "VARIABLE_AMOUNT_OFF":
       return `Get $${redeemMethod?.discountAmount} off on this product`;
     case "FIXED_PERCENTAGE_OFF":
-      return `Get ${redeemMethod?.discountPercentage}% off on this product`;
+      return `Get ${discountPercentage}% off on this product`;
+    case "VARIABLE_PERCENTAGE_OFF":
+      return `Get ${discountPercentage}% off on this product`;
     default:
       return "";
   }
