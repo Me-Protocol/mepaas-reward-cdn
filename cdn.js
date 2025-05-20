@@ -107,8 +107,8 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.classList.add(isRight ? "right-side" : "left-side");
     const iframe = document.createElement("iframe");
     iframe.src = constructIframeUrl();
-    iframe.allow = "clipboard-write";
-    iframe.sandbox = "allow-scripts allow-same-origin";
+    iframe.allow = "clipboard-write; clipboard-read";
+    iframe.sandbox = "allow-scripts allow-same-origin allow-popups allow-forms";
 
     modal.appendChild(iframe);
     ME_PAAS_CONTAINER.appendChild(modal);
@@ -161,6 +161,8 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = "/account/register";
       } else if (event.data.action === "goToSignIn") {
         window.location.href = "/account/login";
+      } else if (event.data.action === "goToProducts") {
+        window.location.href = "/collections/all";
       } else if (event.data.action === "closeModal") {
         closeModal();
       } else if (event.data.action === "openPage") {
@@ -361,12 +363,13 @@ const ME_PAAS_CONTAINER_STYLE = `
       position: fixed;
       bottom: 20px;
       z-index: 999999999 !important;
-      width: 372px;
-      height: 700px;
+      width: 375px;
+      height: 600px;
       padding: 0;
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: #FAFAFA;
+      border-radius: 24px;
+      border: 1px solid #E6E6E6;
+      // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -437,6 +440,7 @@ const ME_PAAS_CONTAINER_STYLE = `
         left: 0 !important;
         bottom: 0 !important;
         top: 0 !important;
+        border: none
       }
     }
     @media (max-height: 700px) {
