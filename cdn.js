@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const scriptTagCustomerEmail = scriptTag?.getAttribute("customer-email");
   env = scriptTag ? scriptTag?.getAttribute("env") : "dev";
 
+  const ref =
+    window.location.search.split("ref=")[1] &&
+    window.location.search.split("ref=")[1] === "me-rewards";
+
   console.log("GRAB API KEY AND ENV", scriptTag?.getAttribute("env"), apiKey);
 
   APP_SETTINGS = {
@@ -58,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initialize();
   }
 
-  async function initialize() {
+  async function initialize(defaultOpen = false) {
     if (!apiKey) {
       return;
     }
@@ -121,24 +125,28 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     };
 
+    function openModal() {
+      closePopup();
+
+      if (customerEmail) {
+        iframe.contentWindow.postMessage({ email: customerEmail }, "*");
+      }
+      if (offerData) {
+        iframe.contentWindow.postMessage(
+          { offerData: offerData, productId: productId },
+          "*"
+        );
+      }
+
+      modal.classList.add("active");
+      button.classList.add("active");
+
+      modalOpen = true;
+    }
+
     button.addEventListener("click", function () {
       if (!modalOpen) {
-        closePopup();
-
-        if (customerEmail) {
-          iframe.contentWindow.postMessage({ email: customerEmail }, "*");
-        }
-        if (offerData) {
-          iframe.contentWindow.postMessage(
-            { offerData: offerData, productId: productId },
-            "*"
-          );
-        }
-
-        modal.classList.add("active");
-        button.classList.add("active");
-
-        modalOpen = true;
+        openModal();
       } else {
         closeModal();
       }
@@ -168,9 +176,18 @@ document.addEventListener("DOMContentLoaded", function () {
       } else if (event.data.action === "openPage") {
         // window.location.href = event.data.url;
         // go to url and also preserve the query params
-        window.location.href = `${event.data.url}${window.location.search}`;
+        window.location.href = `${
+          event.data.url
+        }${window.location.search.replace(
+          "?ref=me-rewards",
+          ""
+        )}?ref=me-rewards`;
       }
     });
+
+    if (defaultOpen) {
+      openModal();
+    }
   }
 
   async function fetchOfferData() {
@@ -196,9 +213,15 @@ document.addEventListener("DOMContentLoaded", function () {
         offerData = res?.data?.[0];
 
         if (offerData) {
-          showOfferPopup();
+          if (ref) {
+            initialize(true);
+          } else {
+            showOfferPopup();
+            initialize();
+          }
+        } else {
+          initialize();
         }
-        initialize();
       } else {
         console.error("Failed to fetch offer data");
       }
@@ -335,7 +358,7 @@ const ME_PAAS_CONTAINER_STYLE = `
     }
     #me-offer-popup-close-button {
       background-color: #fff;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
       border-radius: 100px;
       border: none;
       cursor: pointer;
@@ -369,7 +392,7 @@ const ME_PAAS_CONTAINER_STYLE = `
       background-color: #FAFAFA;
       border-radius: 24px;
       border: 1px solid #E6E6E6;
-      // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
       align-items: flex-end;
