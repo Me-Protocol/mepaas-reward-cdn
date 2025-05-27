@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const apiKey = scriptTag ? scriptTag?.getAttribute("api-key") : null;
   const scriptTagProductId = scriptTag?.getAttribute("product-id");
   const scriptTagCustomerEmail = scriptTag?.getAttribute("customer-email");
+  const scriptTagCustomerName = scriptTag?.getAttribute("customer-name");
   env = scriptTag ? scriptTag?.getAttribute("env") : "dev";
 
   const ref =
@@ -55,6 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const customerEmail = scriptTagCustomerEmail
     ? scriptTag?.getAttribute("customer-email")
     : window.customerEmail;
+  const customerName = scriptTagCustomerName
+    ? scriptTag?.getAttribute("customer-name")
+    : window.customerName;
 
   if (productId) {
     fetchOfferData();
@@ -70,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function constructIframeUrl() {
       return `${
         APP_SETTINGS.iframeUrl
-      }?apiKey=${apiKey}${customerEmail ? `&email=${customerEmail}` : ""}${productId ? `&productId=${productId}` : ""}${offerData ? `&offerData=${JSON.stringify(offerData)}` : ""}`;
+      }?apiKey=${encodeURIComponent(apiKey)}${customerEmail ? `&email=${encodeURIComponent(customerEmail)}` : ""}${customerName ? `&name=${encodeURIComponent(customerName)}` : ""}${productId ? `&productId=${encodeURIComponent(productId)}` : ""}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
     }
 
     const brandRes = await fetch(
@@ -120,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     iframe.onload = function () {
       iframe.contentWindow.postMessage(
-        { apiKey: apiKey, email: customerEmail },
+        { apiKey: apiKey, email: customerEmail, name: customerName },
         "*"
       );
     };
@@ -129,7 +133,10 @@ document.addEventListener("DOMContentLoaded", function () {
       closePopup();
 
       if (customerEmail) {
-        iframe.contentWindow.postMessage({ email: customerEmail }, "*");
+        iframe.contentWindow.postMessage(
+          { email: customerEmail, name: customerName },
+          "*"
+        );
       }
       if (offerData) {
         iframe.contentWindow.postMessage(
@@ -171,11 +178,11 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = "/account/login";
       } else if (event.data.action === "goToProducts") {
         window.location.href = "/collections/all";
+      } else if (event.data.action === "goToLogout") {
+        window.location.href = "/account/logout";
       } else if (event.data.action === "closeModal") {
         closeModal();
       } else if (event.data.action === "openPage") {
-        // window.location.href = event.data.url;
-        // go to url and also preserve the query params
         window.location.href = `${
           event.data.url
         }${window.location.search.replace(
