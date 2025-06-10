@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ? "https://mepass-rewards-dev.vercel.app"
         : env === "staging"
         ? "https://mepass-rewards-staging.vercel.app"
-        : "https://mepass-rewards.vercel.app",
+        : "https://mepaas-rewards.vercel.app/",
     paasApiUrl:
       env === "local"
         ? "https://paas.meappbounty.com/v1/api"
