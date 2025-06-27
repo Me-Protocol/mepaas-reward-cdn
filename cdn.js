@@ -137,6 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openModal() {
       closePopup();
+      document.body.style.overflowX = "hidden";
 
       if (customerEmail) {
         iframe.contentWindow.postMessage(
@@ -168,6 +169,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const closeModal = function () {
       modal.classList.remove("active");
       button.classList.remove("active");
+      document.body.style.overflowX = "";
 
       setTimeout(() => {
         modalOpen = false;
@@ -468,12 +470,13 @@ const ME_PAAS_CONTAINER_STYLE = `
         visibility: visible;
       }
       .me-paas-modal {
-        width: 100vw;
+        width: 100%;
+        left: 0 !important;
+        right: 0 !important;
+        overflow-x: hidden;
         height: calc(100vh - 60px);
         border-radius: 0;
         position: fixed;
-        right: 0 !important;
-        left: 0 !important;
         bottom: 0 !important;
         top: 60px !important;
         border: none;
