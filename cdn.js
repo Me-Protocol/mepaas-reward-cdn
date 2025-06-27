@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://mepaas-rewards.vercel.app/",
     paasApiUrl:
       env === "local"
-        ? "https://paas.meappbounty.com/v1/api"
+        ? "https://paas.usemeprotocol.com/v1/api"
         : env === "development"
         ? "https://paas.meappbounty.com/v1/api"
         : env === "staging"
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://paas.memarketplace.io/v1/api",
     businessApiUrl:
       env === "local"
-        ? "https://api.meappbounty.com"
+        ? "https://api.usemeprotocol.com"
         : env === "development"
         ? "https://api.meappbounty.com"
         : env === "staging"
@@ -69,6 +69,12 @@ document.addEventListener("DOMContentLoaded", function () {
   async function initialize(defaultOpen = false) {
     if (!apiKey) {
       return;
+    }
+
+    // Don't open modal on mobile when ref=me-rewards is present
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && ref && defaultOpen) {
+      defaultOpen = false;
     }
 
     function constructIframeUrl() {
@@ -462,15 +468,27 @@ const ME_PAAS_CONTAINER_STYLE = `
         visibility: visible;
       }
       .me-paas-modal {
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: calc(100vh - 60px);
         border-radius: 0;
         position: fixed;
         right: 0 !important;
         left: 0 !important;
         bottom: 0 !important;
-        top: 0 !important;
-        border: none
+        top: 60px !important;
+        border: none;
+        transform: translateY(100vh);
+      }
+      .me-paas-modal.active {
+        transform: translateY(0);
+      }
+      .me-rewards-button {
+        width: 120px;
+        height: 50px;
+        font-size: 12px;
+      }
+      .me-rewards-button span {
+        font-size: 12px;
       }
     }
     @media (max-height: 700px) {
