@@ -494,7 +494,7 @@ const ME_PAAS_CONTAINER_STYLE = `
         font-size: 12px;
       }
     }
-    @media (max-height: 700px) {
+    @media (min-width: 769px) and (max-height: 700px) {
       .me-paas-modal {
         height: calc(100vh - 50px);
         width: 360px;
