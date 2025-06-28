@@ -471,15 +471,16 @@ const ME_PAAS_CONTAINER_STYLE = `
       }
       .me-paas-modal {
         width: 100%;
+        height: 100%;
         left: 0 !important;
         right: 0 !important;
-        overflow-x: hidden;
-        height: calc(100vh - 60px);
+        top: 0 !important;
+        bottom: 0 !important;
         border-radius: 0;
         position: fixed;
-        bottom: 0 !important;
-        top: 60px !important;
         border: none;
+        overflow-x: hidden;
+        z-index: 999999999 !important;
         transform: translateY(100vh);
       }
       .me-paas-modal.active {
