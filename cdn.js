@@ -477,7 +477,7 @@ const ME_PAAS_CONTAINER_STYLE = `
         top: 0 !important;
         bottom: 0 !important;
         border-radius: 0;
-        position: fixed;
+        position: fixed !important;
         border: none;
         overflow-x: hidden;
         z-index: 999999999 !important;
