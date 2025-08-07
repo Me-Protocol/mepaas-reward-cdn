@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Referral Tracking Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .test-section {
+        background: #f5f5f5;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+      .test-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      .test-button:hover {
+        background: #0056b3;
+      }
+      .status {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-family: monospace;
+      }
+      .referral-info {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎯 Referral Tracking Test</h1>
+
+    <div class="test-section">
+      <h2>Test Scenarios</h2>
+
+      <h3>1. Test with Referral Code</h3>
+      <p>Click the button below to simulate visiting with a referral code:</p>
+      <button class="test-button" onclick="testWithReferral()">
+        Test with ?ref=COLOUR9WU
+      </button>
+
+      <h3>2. Check Current Status</h3>
+      <button class="test-button" onclick="checkStatus()">
+        Check Referral Status
+      </button>
+
+      <h3>3. Clear Referral Data</h3>
+      <button class="test-button" onclick="clearReferralData()">
+        Clear All Referral Data
+      </button>
+    </div>
+
+    <div class="test-section">
+      <h2>Current Status</h2>
+      <div id="status-display" class="status">
+        Click "Check Referral Status" to see current state
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>Referral Information</h2>
+      <div id="referral-display" class="referral-info">
+        No referral data available
+      </div>
+    </div>
+
+    <!-- Load the CDN script -->
+    <script
+      id="mepaas-rewards"
+      src="cdn.js"
+      api-key="7qlqbmt5a2lqr37lhu3p4p"
+      env="local"
+      customer-email="test+reftest@gmail.com"
+      customer-name="Test Customer"
+    ></script>
+
+    <script>
+      function testWithReferral() {
+        // Simulate visiting with a referral code
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set("ref", "COLOUR9WU");
+        window.history.pushState({}, "", currentUrl.toString());
+
+        // Reload the page to trigger referral tracking
+        window.location.reload();
+      }
+
+      function checkStatus() {
+        const statusDiv = document.getElementById("status-display");
+        const referralDiv = document.getElementById("referral-display");
+
+        // Check session storage directly
+        const sessionId = sessionStorage.getItem("referral_session_id");
+        const referralData = sessionStorage.getItem("current_referral");
+
+        statusDiv.innerHTML = `
+                <strong>Session ID:</strong> ${sessionId || "Not set"}<br>
+                <strong>Has Referral Data:</strong> ${
+                  referralData ? "Yes" : "No"
+                }
+            `;
+
+        if (referralData) {
+          const referral = JSON.parse(referralData);
+          referralDiv.innerHTML = `
+                    <strong>Referral Code:</strong> ${referral.referralCode}<br>
+                    <strong>Session ID:</strong> ${referral.sessionId}<br>
+                    <strong>Tracked At:</strong> ${referral.trackedAt}
+                `;
+        } else {
+          referralDiv.innerHTML = "No referral data available";
+        }
+      }
+
+      function clearReferralData() {
+        // Clear session storage
+        sessionStorage.removeItem("referral_session_id");
+        sessionStorage.removeItem("current_referral");
+
+        // Clear URL parameters
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.delete("ref");
+        window.history.pushState({}, "", currentUrl.toString());
+
+        alert("Referral data cleared!");
+        checkStatus();
+      }
+
+      // Check status on page load
+      window.addEventListener("load", function () {
+        setTimeout(checkStatus, 1000);
+      });
+    </script>
+  </body>
+</html>

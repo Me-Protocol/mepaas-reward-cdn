@@ -1,8 +1,274 @@
+/**
+ * 🎯 ME-PAAS Rewards CDN Script
+ *
+ * This script provides a complete rewards and referral system integration for e-commerce websites.
+ * It creates a floating rewards button that opens an iframe modal with the rewards application.
+ *
+ * ================================================================================
+ *
+ * 📋 MAIN FUNCTIONALITY:
+ *
+ * 1. REWARDS BUTTON & MODAL
+ *    - Creates a floating "Rewards" button on the page
+ *    - Opens a modal with an iframe containing the rewards application
+ *    - Handles responsive design (full-screen on mobile, sidebar on desktop)
+ *    - Supports left/right positioning based on brand settings
+ *
+ * 2. REFERRAL TRACKING SYSTEM
+ *    - Detects referral codes from URL parameters (?ref=CODE)
+ *    - Generates persistent session IDs using browser fingerprinting
+ *    - Stores referral data in sessionStorage for persistence
+ *    - Passes referral data to iframe via URL parameters and postMessage
+ *
+ * 3. OFFER POPUP SYSTEM
+ *    - Fetches product-specific offers from the business API
+ *    - Displays special offer popups for products with available offers
+ *    - Integrates with referral system for enhanced user experience
+ *
+ * ================================================================================
+ *
+ * 🔧 CONFIGURATION:
+ *
+ * Script Tag Attributes:
+ * - api-key: Your API key for authentication
+ * - env: Environment (local, development, staging, production)
+ * - product-id: Product ID for offer fetching
+ * - customer-email: Customer email for personalization
+ * - customer-name: Customer name for personalization
+ *
+ * Environment URLs:
+ * - local: http://localhost:3000
+ * - development: https://mepass-rewards-dev.vercel.app
+ * - staging: https://mepass-rewards-staging.vercel.app
+ * - production: https://mepaas-rewards.vercel.app/
+ *
+ * ================================================================================
+ *
+ * 📊 DATA FLOW:
+ *
+ * 1. SCRIPT LOADING:
+ *    - Detects referral codes from URL (?ref=CODE)
+ *    - Generates session ID using browser fingerprint
+ *    - Stores referral data in sessionStorage
+ *    - Fetches brand settings from PAAS API
+ *
+ * 2. BUTTON CREATION:
+ *    - Creates floating rewards button with brand colors
+ *    - Positions button based on brand settings (left/right)
+ *    - Applies hover effects and responsive styling
+ *
+ * 3. MODAL & IFRAME:
+ *    - Creates modal container with iframe
+ *    - Constructs iframe URL with all necessary parameters
+ *    - Handles iframe loading and postMessage communication
+ *    - Manages modal open/close states
+ *
+ * 4. OFFER SYSTEM:
+ *    - Fetches product offers if productId is provided
+ *    - Shows offer popup for products with available offers
+ *    - Integrates with referral tracking for enhanced UX
+ *
+ * ================================================================================
+ *
+ * 🔗 IFRAME COMMUNICATION:
+ *
+ * URL Parameters Passed to Iframe:
+ * - apiKey: Authentication key
+ * - email: Customer email (if available)
+ * - name: Customer name (if available)
+ * - productId: Product ID (if available)
+ * - offerData: JSON string of offer data (if available)
+ * - referralCode: Referral code (if detected)
+ * - sessionId: Session ID for tracking
+ *
+ * PostMessage Events:
+ * - Initial load: Sends customer data and referral info
+ * - Modal open: Sends updated customer and offer data
+ * - Modal close: Handles cleanup and offer popup display
+ *
+ * Received Events:
+ * - goToSignUp: Redirects to registration page
+ * - goToSignIn: Redirects to login page
+ * - goToProducts: Redirects to products page
+ * - goToLogout: Redirects to logout page
+ * - closeModal: Closes the modal
+ * - openPage: Opens external pages with referral tracking
+ *
+ * ================================================================================
+ *
+ * 🎨 STYLING:
+ *
+ * - Responsive design with mobile-first approach
+ * - Brand color integration with gradient effects
+ * - Smooth animations and transitions
+ * - Accessibility considerations
+ * - Cross-browser compatibility
+ *
+ * ================================================================================
+ *
+ * 🔒 SECURITY:
+ *
+ * - Iframe sandboxing for security
+ * - API key validation
+ * - CORS handling
+ * - XSS prevention through proper encoding
+ *
+ * ================================================================================
+ *
+ * 📱 RESPONSIVE BEHAVIOR:
+ *
+ * Desktop (>768px):
+ * - Sidebar modal (375px width, 600px height)
+ * - Floating button (130px width, 60px height)
+ * - Positioned at bottom-left or bottom-right
+ *
+ * Mobile (≤768px):
+ * - Full-screen modal
+ * - Smaller button (120px width, 50px height)
+ * - Optimized touch interactions
+ *
+ * ================================================================================
+ *
+ * 🧪 TESTING:
+ *
+ * Use test-referral.html for testing:
+ * - Referral code detection
+ * - Session ID generation
+ * - Iframe communication
+ * - Responsive behavior
+ *
+ * ================================================================================
+ *
+ * 📝 DEPENDENCIES:
+ *
+ * External:
+ * - Google Fonts (Inter Tight)
+ * - PAAS API for brand settings
+ * - Business API for offer data
+ *
+ * Browser APIs:
+ * - sessionStorage for data persistence
+ * - postMessage for iframe communication
+ * - Canvas API for browser fingerprinting
+ * - URLSearchParams for URL parsing
+ *
+ * ================================================================================
+ *
+ * 🚀 USAGE EXAMPLE:
+ *
+ * <script id="mepaas-rewards"
+ *         src="cdn.js"
+ *         api-key="your-api-key"
+ *         env="dev"
+ *         customer-email="customer@example.com"
+ *         customer-name="John Doe">
+ * </script>
+ *
+ * ================================================================================
+ *
+ * 📄 VERSION: 1.0.0
+ * 📅 LAST UPDATED: 2024
+ * 👨‍💻 MAINTAINER: @codemobii
+ */
+
 let popupVisible = false;
 let popupClosed = false;
 let offerData = null;
 let env = "dev";
 let APP_SETTINGS;
+
+// Referral tracking constants
+const REFERRAL_SESSION_KEY = "referral_session_id";
+const REFERRAL_DATA_KEY = "current_referral";
+
+// Simple session ID generation using browser fingerprint
+function generateSessionId() {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.textBaseline = "top";
+  ctx.font = "14px Arial";
+  ctx.fillText("Browser fingerprint", 2, 2);
+
+  const fingerprint = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + "x" + screen.height,
+    new Date().getTimezoneOffset(),
+    canvas.toDataURL(),
+  ].join("|");
+
+  // Create hash from fingerprint
+  let hash = 0;
+  for (let i = 0; i < fingerprint.length; i++) {
+    const char = fingerprint.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  return `session_${Math.abs(hash).toString(36)}`;
+}
+
+function getSessionId() {
+  let sessionId = sessionStorage.getItem(REFERRAL_SESSION_KEY);
+  if (!sessionId) {
+    sessionId = generateSessionId();
+    sessionStorage.setItem(REFERRAL_SESSION_KEY, sessionId);
+  }
+  return sessionId;
+}
+
+function trackReferralFromURL() {
+  try {
+    // Check URL for referral code
+    const urlParams = new URLSearchParams(window.location.search);
+    const referralCode = urlParams.get("ref");
+
+    if (!referralCode) {
+      console.log("No referral code in URL");
+      return null;
+    }
+
+    console.log("Found referral code:", referralCode);
+    const sessionId = getSessionId();
+
+    // Store referral info in session storage
+    const referralData = {
+      referralCode,
+      sessionId,
+      trackedAt: new Date().toISOString(),
+    };
+
+    sessionStorage.setItem(REFERRAL_DATA_KEY, JSON.stringify(referralData));
+
+    console.log("Referral visit tracked successfully");
+
+    // Clean URL (optional - removes ?ref= parameter)
+    cleanURL();
+
+    return referralData;
+  } catch (error) {
+    console.error("Error tracking referral:", error);
+    return null;
+  }
+}
+
+function getCurrentReferral() {
+  const referralData = sessionStorage.getItem(REFERRAL_DATA_KEY);
+  return referralData ? JSON.parse(referralData) : null;
+}
+
+function hasPendingReferral() {
+  return getCurrentReferral() !== null;
+}
+
+function cleanURL() {
+  const url = new URL(window.location);
+  url.searchParams.delete("ref");
+  window.history.replaceState({}, document.title, url.toString());
+}
+
+// Initialize referral tracking on script load
+trackReferralFromURL();
 
 document.addEventListener("DOMContentLoaded", function () {
   // Container for the PAAS
@@ -34,7 +300,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://mepaas-rewards.vercel.app/",
     paasApiUrl:
       env === "local"
-        ? "https://paas.usemeprotocol.com/v1/api"
+        ? "https://paas.meappbounty.com/v1/api"
         : env === "development"
         ? "https://paas.meappbounty.com/v1/api"
         : env === "staging"
@@ -42,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://paas.memarketplace.io/v1/api",
     businessApiUrl:
       env === "local"
-        ? "https://api.usemeprotocol.com"
+        ? "https://api.meappbounty.com"
         : env === "development"
         ? "https://api.meappbounty.com"
         : env === "staging"
@@ -78,9 +344,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function constructIframeUrl() {
+      const currentReferral = getCurrentReferral();
       return `${
         APP_SETTINGS.iframeUrl
-      }?apiKey=${encodeURIComponent(apiKey)}${customerEmail ? `&email=${encodeURIComponent(customerEmail)}` : ""}${customerName ? `&name=${encodeURIComponent(customerName)}` : ""}${productId ? `&productId=${encodeURIComponent(productId)}` : ""}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}`;
+      }?apiKey=${encodeURIComponent(apiKey)}${customerEmail ? `&email=${encodeURIComponent(customerEmail)}` : ""}${customerName ? `&name=${encodeURIComponent(customerName)}` : ""}${productId ? `&productId=${encodeURIComponent(productId)}` : ""}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}${currentReferral ? `&referralCode=${encodeURIComponent(currentReferral.referralCode)}&sessionId=${encodeURIComponent(currentReferral.sessionId)}` : ""}`;
     }
 
     const brandRes = await fetch(
@@ -129,27 +396,43 @@ document.addEventListener("DOMContentLoaded", function () {
     ME_PAAS_CONTAINER.appendChild(button);
 
     iframe.onload = function () {
-      iframe.contentWindow.postMessage(
-        { apiKey: apiKey, email: customerEmail, name: customerName },
-        "*"
-      );
+      const currentReferral = getCurrentReferral();
+      const messageData = {
+        apiKey: apiKey,
+        email: customerEmail,
+        name: customerName,
+      };
+
+      // Add referral data if available
+      if (currentReferral) {
+        messageData.referralCode = currentReferral.referralCode;
+        messageData.sessionId = currentReferral.sessionId;
+      }
+
+      iframe.contentWindow.postMessage(messageData, "*");
     };
 
     function openModal() {
       closePopup();
       document.body.style.overflowX = "hidden";
 
+      const currentReferral = getCurrentReferral();
+
       if (customerEmail) {
-        iframe.contentWindow.postMessage(
-          { email: customerEmail, name: customerName },
-          "*"
-        );
+        const emailMessage = { email: customerEmail, name: customerName };
+        if (currentReferral) {
+          emailMessage.referralCode = currentReferral.referralCode;
+          emailMessage.sessionId = currentReferral.sessionId;
+        }
+        iframe.contentWindow.postMessage(emailMessage, "*");
       }
       if (offerData) {
-        iframe.contentWindow.postMessage(
-          { offerData: offerData, productId: productId },
-          "*"
-        );
+        const offerMessage = { offerData: offerData, productId: productId };
+        if (currentReferral) {
+          offerMessage.referralCode = currentReferral.referralCode;
+          offerMessage.sessionId = currentReferral.sessionId;
+        }
+        iframe.contentWindow.postMessage(offerMessage, "*");
       }
 
       modal.classList.add("active");
