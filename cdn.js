@@ -347,7 +347,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const currentReferral = getCurrentReferral();
       return `${
         APP_SETTINGS.iframeUrl
-      }?apiKey=${encodeURIComponent(apiKey)}${customerEmail ? `&email=${encodeURIComponent(customerEmail)}` : ""}${customerName ? `&name=${encodeURIComponent(customerName)}` : ""}${productId ? `&productId=${encodeURIComponent(productId)}` : ""}${offerData ? `&offerData=${encodeURIComponent(JSON.stringify(offerData))}` : ""}${currentReferral ? `&referralCode=${encodeURIComponent(currentReferral.referralCode)}&sessionId=${encodeURIComponent(currentReferral.sessionId)}` : ""}`;
+      }?apiKey=${encodeURIComponent(apiKey)}${customerEmail ? `&email=${encodeURIComponent(customerEmail)}` : ""}${customerName ? `&name=${encodeURIComponent(customerName)}` : ""}${productId ? `&productId=${encodeURIComponent(productId)}` : ""}${currentReferral ? `&referralCode=${encodeURIComponent(currentReferral.referralCode)}&sessionId=${encodeURIComponent(currentReferral.sessionId)}` : ""}`;
     }
 
     const brandRes = await fetch(
@@ -410,6 +410,25 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       iframe.contentWindow.postMessage(messageData, "*");
+
+      // Also send product and offer data after load to avoid long URL query strings
+      if (productId) {
+        const baseMessage = { productId: productId };
+        if (currentReferral) {
+          baseMessage.referralCode = currentReferral.referralCode;
+          baseMessage.sessionId = currentReferral.sessionId;
+        }
+        iframe.contentWindow.postMessage(baseMessage, "*");
+      }
+
+      if (offerData) {
+        const offerMessage = { offerData: offerData, productId: productId };
+        if (currentReferral) {
+          offerMessage.referralCode = currentReferral.referralCode;
+          offerMessage.sessionId = currentReferral.sessionId;
+        }
+        iframe.contentWindow.postMessage(offerMessage, "*");
+      }
     };
 
     function openModal() {
