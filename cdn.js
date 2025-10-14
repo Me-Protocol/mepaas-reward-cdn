@@ -493,12 +493,28 @@ document.addEventListener("DOMContentLoaded", function () {
       } else if (event.data.action === "closeModal") {
         closeModal();
       } else if (event.data.action === "openPage") {
-        window.location.href = `${
-          event.data.url
-        }${window.location.search.replace(
-          "?ref=me-rewards",
-          ""
-        )}?ref=me-rewards`;
+        try {
+          const destUrl = new URL(event.data.url, window.location.origin);
+
+          // Merge current page query params (except 'ref') into destination if missing
+          const currentParams = new URLSearchParams(window.location.search);
+          currentParams.delete("ref");
+          currentParams.forEach((value, key) => {
+            if (!destUrl.searchParams.has(key)) {
+              destUrl.searchParams.append(key, value);
+            }
+          });
+
+          // Ensure ref=me-rewards is present
+          destUrl.searchParams.set("ref", "me-rewards");
+
+          window.location.href = destUrl.toString();
+        } catch (e) {
+          // Fallback: append correctly with ? or &
+          const base = String(event.data.url).replace(/[?&]ref=me-rewards/, "");
+          const sep = base.includes("?") ? "&" : "?";
+          window.location.href = `${base}${sep}ref=me-rewards`;
+        }
       }
     });
 
