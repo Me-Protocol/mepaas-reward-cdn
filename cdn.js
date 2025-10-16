@@ -176,6 +176,8 @@ let popupClosed = false;
 let offerData = null;
 let env = "dev";
 let APP_SETTINGS;
+let popupShowTimeoutId = null;
+let popupAutoDismissTimeoutId = null;
 
 // Referral tracking constants
 const REFERRAL_SESSION_KEY = "referral_session_id";
@@ -300,7 +302,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://mepaas-rewards.vercel.app/",
     paasApiUrl:
       env === "local"
-        ? "https://paas.meappbounty.com/v1/api"
+        ? "https://paas.memarketplace.io/v1/api"
         : env === "development"
         ? "https://paas.meappbounty.com/v1/api"
         : env === "staging"
@@ -308,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://paas.memarketplace.io/v1/api",
     businessApiUrl:
       env === "local"
-        ? "https://api.meappbounty.com"
+        ? "https://api.memarketplace.io"
         : env === "development"
         ? "https://api.meappbounty.com"
         : env === "staging"
@@ -379,7 +381,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     button.classList.add("me-rewards-button");
     button.classList.add(isRight ? "right-side" : "left-side");
-    button.innerHTML = `<span>Rewards</span>`;
+    button.innerHTML = `
+      <span>Rewards</span>
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8.30417 5.05835V15.6088M1 5.86992C1 5.65468 1.0855 5.44825 1.2377 5.29605C1.3899 5.14385 1.59633 5.05835 1.81157 5.05835H14.7968C15.012 5.05835 15.2184 5.14385 15.3706 5.29605C15.5228 5.44825 15.6083 5.65468 15.6083 5.86992V7.49307C15.6083 7.70831 15.5228 7.91474 15.3706 8.06694C15.2184 8.21914 15.012 8.30465 14.7968 8.30465H1.81157C1.59633 8.30465 1.3899 8.21914 1.2377 8.06694C1.0855 7.91474 1 7.70831 1 7.49307V5.86992Z" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13.9853 8.30452V13.9855C13.9853 14.416 13.8143 14.8289 13.5099 15.1333C13.2055 15.4377 12.7927 15.6087 12.3622 15.6087H4.24644C3.81595 15.6087 3.4031 15.4377 3.0987 15.1333C2.7943 14.8289 2.62329 14.416 2.62329 13.9855V8.30452M4.65223 5.05822C4.11412 5.05822 3.59805 4.84446 3.21755 4.46396C2.83705 4.08346 2.62329 3.5674 2.62329 3.02929C2.62329 2.49118 2.83705 1.97512 3.21755 1.59462C3.59805 1.21412 4.11412 1.00035 4.65223 1.00035C5.43514 0.986714 6.20236 1.36659 6.85381 2.09043C7.50527 2.81427 8.01075 3.8485 8.30431 5.05822C8.59788 3.8485 9.10335 2.81427 9.75481 2.09043C10.4063 1.36659 11.1735 0.986714 11.9564 1.00035C12.4945 1.00035 13.0106 1.21412 13.3911 1.59462C13.7716 1.97512 13.9853 2.49118 13.9853 3.02929C13.9853 3.5674 13.7716 4.08346 13.3911 4.46396C13.0106 4.84446 12.4945 5.05822 11.9564 5.05822" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
 
     let modalOpen = false;
 
@@ -393,6 +401,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     modal.appendChild(iframe);
     ME_PAAS_CONTAINER.appendChild(modal);
+    
+    // Mobile overlay behind modal (only visible on mobile via CSS)
+    const overlay = document.createElement("div");
+    overlay.classList.add("me-paas-overlay");
+    ME_PAAS_CONTAINER.appendChild(overlay);
     ME_PAAS_CONTAINER.appendChild(button);
 
     iframe.onload = function () {
@@ -456,6 +469,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
       modal.classList.add("active");
       button.classList.add("active");
+      if (isMobile) {
+        overlay.classList.add("active");
+      } else {
+        overlay.classList.remove("active");
+      }
 
       modalOpen = true;
     }
@@ -472,6 +490,7 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.classList.remove("active");
       button.classList.remove("active");
       document.body.style.overflowX = "";
+      overlay.classList.remove("active");
 
       setTimeout(() => {
         modalOpen = false;
@@ -480,6 +499,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }, 100);
     };
+
+    // Tap overlay to close on mobile only
+    overlay.addEventListener("click", function () {
+      if (window.innerWidth <= 768) {
+        closeModal();
+      }
+    });
 
     window.addEventListener("message", function (event) {
       if (event.data.action === "goToSignUp") {
@@ -566,43 +592,56 @@ document.addEventListener("DOMContentLoaded", function () {
   function showOfferPopup() {
     if (popupVisible) return;
     if (popupClosed) return;
+    
+    // Clear any existing timers
+    if (popupShowTimeoutId) clearTimeout(popupShowTimeoutId);
+    if (popupAutoDismissTimeoutId) clearTimeout(popupAutoDismissTimeoutId);
 
     const OFFER_POPUP = document.createElement("div");
     OFFER_POPUP.classList.add("me-special-offer-popup");
+    OFFER_POPUP.classList.add("is-hidden");
     OFFER_POPUP.innerHTML = `
-        <div class="me-special-offer-popup">
-          <button id="me-offer-popup-close-button">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
-              <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+          <button id=\"me-offer-popup-close-button\">
+            <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\" fill=\"currentColor\" class=\"size-4\">
+              <path d=\"M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z\" />
             </svg>
           </button>
-          <img src="https://tidio-images-messenger.s3.amazonaws.com/syow1wpcd4vnrtfogriakjlqfr3nee0g/images/4b207885-48d2-46f9-abe4-67229ac89423.gif"/>
+          <img src=\"https://tidio-images-messenger.s3.amazonaws.com/syow1wpcd4vnrtfogriakjlqfr3nee0g/images/4b207885-48d2-46f9-abe4-67229ac89423.gif\"/>
           <div>
             <h3>${getOfferDescription(offerData)} 🎁</h3>
             <p>Use your coupon to get a discount on this product. Click on the reward button to get started!</p>
           </div>
-        </div>
     `;
 
     ME_PAAS_CONTAINER.appendChild(OFFER_POPUP);
-    document
-      .getElementById("me-offer-popup-close-button")
-      .addEventListener("click", function () {
-        popupClosed = true;
-        offerData = null;
+    const closeBtn = document.getElementById("me-offer-popup-close-button");
+    closeBtn.addEventListener("click", function () {
+      popupClosed = true;
+      offerData = null;
+      closePopup();
+    });
+
+    popupShowTimeoutId = setTimeout(() => {
+      OFFER_POPUP.classList.remove("is-hidden");
+      OFFER_POPUP.classList.add("is-visible");
+      popupVisible = true;
+
+      // Auto-dismiss after 5s
+      popupAutoDismissTimeoutId = setTimeout(() => {
         closePopup();
-      });
-    popupVisible = true;
+      }, 5000);
+    }, 2000);
   }
 
   function closePopup() {
     const popup = document.querySelector(".me-special-offer-popup");
     if (popup) {
-      popup.classList.add("hidden");
+      popup.classList.remove("is-visible");
+      popup.classList.add("is-closing");
       setTimeout(() => {
         popup.remove();
         popupVisible = false;
-      }, 100);
+      }, 300);
     }
   }
 });
@@ -655,6 +694,28 @@ const ME_PAAS_CONTAINER_STYLE = `
     #me-paas-container {
       font-family: 'Inter Tight', sans-serif;
     }
+    .me-paas-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.08);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 999999998 !important; /* just below modal */
+      pointer-events: none;
+    }
+    .me-paas-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    /* Only show overlay on mobile */
+    @media (min-width: 769px) {
+      .me-paas-overlay { display: none; }
+    }
     .me-special-offer-popup {
       background-color: #fff;
       color: #000;
@@ -666,21 +727,37 @@ const ME_PAAS_CONTAINER_STYLE = `
       align-items: center;
       flex-direction: column;
       gap: 20px;
-      transition: all 0.1s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
       position: fixed;
       bottom: 100px;
       right: 20px;
       z-index: 999999999 !important;
     }
+    .me-special-offer-popup.is-hidden {
+      opacity: 0;
+      transform: translateY(16px);
+      visibility: hidden;
+    }
+    .me-special-offer-popup.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+    }
+    .me-special-offer-popup.is-closing {
+      opacity: 0;
+      transform: translateY(16px);
+      visibility: hidden;
+    }
     .me-special-offer-popup img {
       width: 100%;
-      height: 200px;
+      height: 160px;
       object-fit: cover;
     }
     .me-special-offer-popup h3 {
       font-size: 18px;
       font-weight: 600;
       font-family: 'Inter Tight', sans-serif;
+      text-align: left;
     }
     .me-special-offer-popup p {
       font-size: 14px;
@@ -688,6 +765,7 @@ const ME_PAAS_CONTAINER_STYLE = `
       color: #666666;
       font-family: 'Inter Tight', sans-serif;
       margin-top: 5px;
+      text-align: left;
     }
     #me-offer-popup-close-button {
       background-color: #fff;
@@ -782,17 +860,45 @@ const ME_PAAS_CONTAINER_STYLE = `
       opacity: 0;
       visibility: hidden;
     }
+    /* Hide the icon by default on desktop to keep original text-only look */
+    .me-rewards-button svg {
+      display: none;
+    }
     @media (max-width: 768px) {
-      #me-offer-popup-close-button {
-        opacity: 1;
-        visibility: visible;
+      /* Larger, high-visibility close button on mobile */
+      #me-offer-popup-close-button { display: none !important; }
+      .me-special-offer-popup {
+        max-width: 340px;
+        padding: 5px 20px;
+        gap: 10px;
+        flex-direction: row;
+        align-items: center;
+        right: 12px;
+        bottom: 86px;
       }
+      .me-special-offer-popup img {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+      .me-special-offer-popup > div {
+        flex: 1;
+        min-width: 0;
+      }
+      .me-special-offer-popup h3 {
+        font-size: 14px;
+      }
+      .me-special-offer-popup p {
+        display: none;
+      }
+      /* close button hidden on mobile */
       .me-paas-modal {
         width: 100%;
-        height: 100%;
+        height: calc(100vh - 100px);
         left: 0 !important;
         right: 0 !important;
-        top: 0 !important;
+        top: auto !important;
         bottom: 0 !important;
         border-radius: 0;
         position: fixed !important;
@@ -805,12 +911,16 @@ const ME_PAAS_CONTAINER_STYLE = `
         transform: translateY(0);
       }
       .me-rewards-button {
-        width: 120px;
-        height: 50px;
-        font-size: 12px;
+        width: 56px;
+        height: 56px;
+        border-radius: 56px;
+        gap: 0;
       }
       .me-rewards-button span {
-        font-size: 12px;
+        display: none;
+      }
+      .me-rewards-button svg {
+        display: block;
       }
     }
     @media (min-width: 769px) and (max-height: 700px) {
