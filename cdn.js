@@ -176,6 +176,7 @@ let popupClosed = false;
 let offerData = null;
 let env = "dev";
 let APP_SETTINGS;
+let ENABLE_DISCOUNT_POPUP = false;
 let popupShowTimeoutId = null;
 let popupAutoDismissTimeoutId = null;
 
@@ -302,7 +303,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://mepaas-rewards.vercel.app/",
     paasApiUrl:
       env === "local"
-        ? "https://paas.memarketplace.io/v1/api"
+        ? "https://paas.meappbounty.com/v1/api"
         : env === "development"
         ? "https://paas.meappbounty.com/v1/api"
         : env === "staging"
@@ -310,7 +311,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "https://paas.memarketplace.io/v1/api",
     businessApiUrl:
       env === "local"
-        ? "https://api.memarketplace.io"
+        ? "https://api.meappbounty.com"
         : env === "development"
         ? "https://api.meappbounty.com"
         : env === "staging"
@@ -364,6 +365,11 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     const brandData = await brandRes.json();
+
+    // Read custom settings for gating discount popup
+    ENABLE_DISCOUNT_POPUP = Boolean(
+      brandData?.data?.customSettings?.enableDiscountPopup
+    );
 
     const color1 = brandData.data?.brandPrimaryColor ?? "#000000";
     const color2 = lightenColor(color1, 10);
@@ -494,7 +500,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       setTimeout(() => {
         modalOpen = false;
-        if (offerData) {
+        if (offerData && ENABLE_DISCOUNT_POPUP) {
           showOfferPopup();
         }
       }, 100);
@@ -546,6 +552,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (defaultOpen) {
       openModal();
+    } else if (offerData && ENABLE_DISCOUNT_POPUP) {
+      // Show popup only when enabled via brand settings
+      showOfferPopup();
     }
   }
 
@@ -575,7 +584,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (ref) {
             initialize(true);
           } else {
-            showOfferPopup();
+            // Initialize; popup will show inside initialize only when enabled
             initialize();
           }
         } else {
