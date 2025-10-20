@@ -920,6 +920,8 @@ const ME_PAAS_CONTAINER_STYLE = `
         top: auto !important;
         bottom: 0 !important;
         border-radius: 0;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
         position: fixed !important;
         border: none;
         overflow-x: hidden;
