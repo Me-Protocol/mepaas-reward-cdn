@@ -366,8 +366,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const brandData = await brandRes.json();
 
-    // Read custom settings for gating discount popup
-    ENABLE_DISCOUNT_POPUP = Boolean(
+    // Read custom settings for gating discount popup (supports string values)
+    ENABLE_DISCOUNT_POPUP = parseBoolean(
       brandData?.data?.customSettings?.enableDiscountPopup
     );
 
@@ -698,6 +698,16 @@ const getOfferDescription = (redeemMethod) => {
 };
 
 // Style for the PAAS
+function parseBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase();
+    if (v === "true") return true;
+    if (v === "false") return false;
+  }
+  return Boolean(value);
+}
+
 const ME_PAAS_CONTAINER_STYLE = `
     @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
     #me-paas-container {
